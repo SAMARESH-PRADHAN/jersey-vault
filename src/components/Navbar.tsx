@@ -1,0 +1,184 @@
+import { useEffect, useRef, useState } from "react";
+import { Link, useRouterState } from "@tanstack/react-router";
+import { AnimatePresence, motion } from "framer-motion";
+import { ChevronDown, LogOut, MapPin, Menu, Package, ShoppingCart, User as UserIcon, X } from "lucide-react";
+import { Button } from "@/components/ui/kit";
+import { CATEGORIES } from "@/data/products";
+import { useApp } from "@/store/app";
+import { cn } from "@/lib/utils";
+
+export function Navbar() {
+  const { user, openAuth, logout, cartCount } = useApp();
+  const [catOpen, setCatOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [drawer, setDrawer] = useState(false);
+  const [accordion, setAccordion] = useState(false);
+  const path = useRouterState({ select: (s) => s.location.pathname });
+  const wrap = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setDrawer(false);
+    setCatOpen(false);
+    setProfileOpen(false);
+  }, [path]);
+
+  useEffect(() => {
+    const onClick = (e: MouseEvent) => {
+      if (wrap.current && !wrap.current.contains(e.target as Node)) {
+        setCatOpen(false);
+        setProfileOpen(false);
+      }
+    };
+    window.addEventListener("click", onClick);
+    return () => window.removeEventListener("click", onClick);
+  }, []);
+
+  const navLink = "text-sm font-bold uppercase tracking-wide text-muted-foreground transition-colors hover:text-foreground";
+
+  return (
+    <header className="sticky top-0 z-50 border-b border-border/80 bg-background/85 backdrop-blur-xl">
+      <div ref={wrap} className="shell flex h-16 items-center justify-between gap-4 md:h-18">
+        <Link to="/" className="flex shrink-0 items-center gap-2" aria-label="Jersey Fit home">
+          <span className="grid h-9 w-9 place-items-center rounded-xl bg-brand text-sm font-black text-primary-foreground">JF</span>
+          <span className="display text-xl sm:text-2xl">
+            Jersey<span className="text-gradient">Fit</span>
+          </span>
+        </Link>
+
+        {/* desktop nav */}
+        <nav className="hidden items-center gap-7 lg:flex">
+          <Link to="/" className={navLink}>Home</Link>
+          <div className="relative">
+            <button className={cn(navLink, "flex items-center gap-1")} onClick={() => setCatOpen((v) => !v)} aria-expanded={catOpen}>
+              Browse Category <ChevronDown className="h-4 w-4" />
+            </button>
+            <AnimatePresence>
+              {catOpen ? (
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 6 }}
+                  className="panel absolute left-0 top-9 w-64 overflow-hidden p-2"
+                >
+                  {CATEGORIES.map((c) => (
+                    <Link key={c.slug} to="/shop" search={{ category: c.slug }}
+                      className="block rounded-xl px-3 py-2.5 text-sm font-semibold hover:bg-surface-2">
+                      {c.label}
+                    </Link>
+                  ))}
+                </motion.div>
+              ) : null}
+            </AnimatePresence>
+          </div>
+          <Link to="/contact" className={navLink}>Contact</Link>
+        </nav>
+
+        <div className="flex items-center gap-2 sm:gap-3">
+          {user ? (
+            <div className="relative hidden sm:block">
+              <button onClick={() => setProfileOpen((v) => !v)} aria-expanded={profileOpen}
+                className="flex h-11 items-center gap-2 rounded-full border border-border bg-surface/60 px-3 text-sm font-bold">
+                <span className="grid h-7 w-7 place-items-center rounded-full bg-brand text-xs text-primary-foreground">
+                  {user.name.charAt(0).toUpperCase()}
+                </span>
+                <span className="max-w-24 truncate">{user.name.split(" ")[0]}</span>
+                <ChevronDown className="h-4 w-4 shrink-0" />
+              </button>
+              <AnimatePresence>
+                {profileOpen ? (
+                  <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 6 }}
+                    className="panel absolute right-0 top-13 w-52 overflow-hidden p-2">
+                    <Link to="/profile/address" className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold hover:bg-surface-2">
+                      <MapPin className="h-4 w-4 text-lime" /> My Address
+                    </Link>
+                    <Link to="/profile/orders" className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold hover:bg-surface-2">
+                      <Package className="h-4 w-4 text-accent" /> My Orders
+                    </Link>
+                    <button onClick={logout} className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold text-destructive hover:bg-surface-2">
+                      <LogOut className="h-4 w-4" /> Logout
+                    </button>
+                  </motion.div>
+                ) : null}
+              </AnimatePresence>
+            </div>
+          ) : (
+            <Button className="hidden sm:inline-flex" onClick={() => openAuth()}>
+              <UserIcon className="h-4 w-4" /> Login / Signup
+            </Button>
+          )}
+
+          <Link to="/cart" aria-label={`Cart, ${cartCount} items`}
+            className="relative grid h-11 w-11 place-items-center rounded-full border border-border bg-surface/60">
+            <motion.span key={cartCount} animate={{ scale: [1, 1.25, 1] }} transition={{ duration: 0.35 }}>
+              <ShoppingCart className="h-5 w-5" />
+            </motion.span>
+            {cartCount > 0 ? (
+              <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-lime px-1 text-[10px] font-black text-lime-foreground">
+                {cartCount}
+              </span>
+            ) : null}
+          </Link>
+
+          <button onClick={() => setDrawer(true)} aria-label="Open menu"
+            className="grid h-11 w-11 place-items-center rounded-full border border-border bg-surface/60 lg:hidden">
+            <Menu className="h-5 w-5" />
+          </button>
+        </div>
+      </div>
+
+      {/* mobile drawer */}
+      <AnimatePresence>
+        {drawer ? (
+          <motion.div className="fixed inset-0 z-100 bg-background/80 backdrop-blur-sm lg:hidden"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setDrawer(false)}>
+            <motion.aside
+              className="ml-auto h-full w-[84%] max-w-sm border-l border-border bg-surface p-6"
+              initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }}
+              transition={{ type: "spring", stiffness: 280, damping: 30 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="mb-6 flex items-center justify-between">
+                <span className="display text-xl">Menu</span>
+                <button onClick={() => setDrawer(false)} aria-label="Close menu"
+                  className="grid h-9 w-9 place-items-center rounded-full border border-border">
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              <nav className="space-y-1">
+                <Link to="/" className="block rounded-xl px-3 py-3 font-bold uppercase hover:bg-surface-2">Home</Link>
+                <button onClick={() => setAccordion((v) => !v)} aria-expanded={accordion}
+                  className="flex w-full items-center justify-between rounded-xl px-3 py-3 font-bold uppercase hover:bg-surface-2">
+                  Browse Category
+                  <ChevronDown className={cn("h-4 w-4 transition-transform", accordion && "rotate-180")} />
+                </button>
+                <AnimatePresence initial={false}>
+                  {accordion ? (
+                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+                      {CATEGORIES.map((c) => (
+                        <Link key={c.slug} to="/shop" search={{ category: c.slug }}
+                          className="block rounded-xl px-6 py-2.5 text-sm font-semibold text-muted-foreground hover:text-foreground">
+                          {c.label}
+                        </Link>
+                      ))}
+                    </motion.div>
+                  ) : null}
+                </AnimatePresence>
+                <Link to="/contact" className="block rounded-xl px-3 py-3 font-bold uppercase hover:bg-surface-2">Contact</Link>
+              </nav>
+
+              <div className="mt-6 space-y-2 border-t border-border pt-6">
+                {user ? (
+                  <>
+                    <Link to="/profile/address" className="block rounded-xl px-3 py-3 font-semibold hover:bg-surface-2">My Address</Link>
+                    <Link to="/profile/orders" className="block rounded-xl px-3 py-3 font-semibold hover:bg-surface-2">My Orders</Link>
+                    <Button variant="outline" className="w-full" onClick={() => { logout(); setDrawer(false); }}>Logout</Button>
+                  </>
+                ) : (
+                  <Button className="w-full" onClick={() => { setDrawer(false); openAuth(); }}>Login / Signup</Button>
+                )}
+              </div>
+            </motion.aside>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
+    </header>
+  );
+}
