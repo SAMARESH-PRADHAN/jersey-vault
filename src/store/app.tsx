@@ -74,7 +74,7 @@ const Ctx = createContext<AppState | null>(null);
 function seedReviews(): Review[] {
   return SEED_REVIEWS.map((r, i) => ({
     id: `seed_${i}`,
-    productId: PRODUCTS[i % PRODUCTS.length].id,
+    productId: PRODUCTS[i % PRODUCTS.length]!.id,
     user: r.user,
     rating: r.rating,
     text: r.text,
@@ -210,8 +210,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       let next = id
         ? list.map((x) => (x.id === id ? { ...a, id } : x))
         : [...list, { ...a, id: uid("adr") }];
-      if (a.isDefault) next = next.map((x) => ({ ...x, isDefault: x.id === (id ?? next[next.length - 1].id) }));
-      if (!next.some((x) => x.isDefault) && next.length) next[0].isDefault = true;
+      const targetId = id ?? next[next.length - 1]?.id;
+      if (a.isDefault) next = next.map((x) => ({ ...x, isDefault: x.id === targetId }));
+      if (!next.some((x) => x.isDefault) && next[0]) next[0] = { ...next[0], isDefault: true };
       return next;
     });
     toast.success(id ? "Address updated" : "Address added");

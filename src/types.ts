@@ -75,7 +75,7 @@ export interface Order {
   payment: string;
   subtotal: number;
   discount: number;
-  coupon?: string;
+  coupon?: string | undefined;
   gst: number;
   total: number;
   statusIndex: number;
