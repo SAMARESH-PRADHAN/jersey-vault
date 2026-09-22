@@ -1,24 +1,173 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useRef, useState } from "react";
+import { motion } from "framer-motion";
+import * as Icons from "lucide-react";
+import { Button, Card, SectionTitle } from "@/components/ui/kit";
+import { HeroSlider } from "@/components/HeroSlider";
+import { ReviewMarquee } from "@/components/ReviewMarquee";
+import { ProductCard } from "@/components/ProductCard";
+import { CLUBS, FACTORY_STATS, SERVICES } from "@/data/content";
+import { PRODUCTS } from "@/data/products";
+import j1 from "@/assets/jersey-1.jpg";
+import j2 from "@/assets/jersey-2.jpg";
+import j3 from "@/assets/jersey-3.jpg";
+import hero from "@/assets/hero-1.jpg";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
 export const Route = createFileRoute("/")({
-  component: Index,
+  head: () => ({
+    meta: [
+      { title: "Jersey Fit — Custom Sports Jerseys Printed In-House" },
+      { name: "description", content: "Design and order custom sports jerseys: all over print, front print and back print. Bulk squad kits, 72-hour dispatch across India." },
+      { property: "og:title", content: "Jersey Fit — Custom Sports Jerseys" },
+      { property: "og:description", content: "Sublimation and DTF printed jerseys for clubs, schools and squads." },
+    ],
+  }),
+  component: Home,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
-function Index() {
+function Counter({ value, suffix }: { value: number; suffix: string }) {
+  const [n, setN] = useState(0);
+  const ref = useRef<HTMLSpanElement>(null);
+  const started = useRef(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const io = new IntersectionObserver((entries) => {
+      if (entries[0]?.isIntersecting && !started.current) {
+        started.current = true;
+        const start = performance.now();
+        const tick = (now: number) => {
+          const p = Math.min(1, (now - start) / 1400);
+          setN(Math.round(value * (1 - Math.pow(1 - p, 3))));
+          if (p < 1) requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+      }
+    }, { threshold: 0.4 });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [value]);
+
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
-    </div>
+    <span ref={ref} className="display text-3xl text-gradient sm:text-4xl">
+      {n.toLocaleString("en-IN")}{suffix}
+    </span>
+  );
+}
+
+function Home() {
+  const featured = PRODUCTS.slice(0, 4);
+
+  return (
+    <>
+      <HeroSlider />
+
+      {/* ABOUT */}
+      <section id="about" className="shell scroll-mt-24 py-20">
+        <div className="grid items-center gap-10 lg:grid-cols-2">
+          <div>
+            <span className="text-xs font-extrabold uppercase tracking-[0.25em] text-lime">About Us</span>
+            <h2 className="mt-3 text-3xl sm:text-5xl">
+              We print kits that <span className="text-gradient">feel like a brand</span>
+            </h2>
+            <p className="mt-5 text-sm text-muted-foreground sm:text-base">
+              Jersey Fit started in 2016 on a single sublimation press in Tirupur. Today our team of 64 prints,
+              stitches and ships squad kits for more than 1,400 clubs, academies and corporate leagues across India.
+            </p>
+            <p className="mt-4 text-sm text-muted-foreground sm:text-base">
+              We only make top wear — jerseys. That focus is why our print registration, fabric weight and sizing
+              stay consistent whether you order 10 pieces or 10,000.
+            </p>
+            <div className="mt-7 flex gap-3">
+              <Link to="/shop"><Button>Browse jerseys</Button></Link>
+              <Link to="/contact"><Button variant="outline">Talk to us</Button></Link>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            {[j1, j2, j3, hero].map((src, i) => (
+              <motion.img key={i} src={src} alt="Jersey Fit production and products" loading="lazy" width={1024} height={1024}
+                initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+                transition={{ delay: i * 0.08 }}
+                className={`h-full w-full rounded-2xl border border-border object-cover ${i % 3 === 0 ? "aspect-square" : "aspect-4/5"}`} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* SERVICES */}
+      <section id="services" className="shell scroll-mt-24 py-16">
+        <SectionTitle kicker="Services" title="Everything your kit needs" sub="From artwork to doorstep — handled in one place." />
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {SERVICES.map((s, i) => {
+            const Icon = (Icons[s.icon as keyof typeof Icons] ?? Icons.Star) as Icons.LucideIcon;
+            return (
+              <motion.div key={s.title} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }} transition={{ delay: i * 0.05 }}>
+                <Card className="h-full transition-transform hover:-translate-y-1">
+                  <span className="grid h-12 w-12 place-items-center rounded-2xl bg-heat">
+                    <Icon className="h-6 w-6 text-primary-foreground" />
+                  </span>
+                  <h3 className="mt-4 text-lg">{s.title}</h3>
+                  <p className="mt-2 text-sm text-muted-foreground">{s.text}</p>
+                </Card>
+              </motion.div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* FEATURED */}
+      <section className="shell py-16">
+        <SectionTitle kicker="Trending" title="Fresh off the press" />
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          {featured.map((p) => <ProductCard key={p.id} product={p} />)}
+        </div>
+        <div className="mt-10 text-center">
+          <Link to="/shop"><Button size="lg" variant="lime">View all jerseys</Button></Link>
+        </div>
+      </section>
+
+      {/* FACTORY */}
+      <section id="factory" className="scroll-mt-24 border-y border-border bg-surface/40 py-20">
+        <div className="shell">
+          <SectionTitle kicker="Our Factory" title="18,000 sq ft of printing muscle" sub="Two sublimation lines, four DTF stations and an in-house stitching floor." />
+          <div className="grid gap-4 sm:grid-cols-4">
+            {FACTORY_STATS.map((s) => (
+              <Card key={s.label} className="text-center">
+                <Counter value={s.value} suffix={s.suffix} />
+                <p className="mt-1 text-xs font-bold uppercase tracking-wider text-muted-foreground">{s.label}</p>
+              </Card>
+            ))}
+          </div>
+          <div className="mt-6 grid gap-4 sm:grid-cols-3">
+            {[hero, j2, j1].map((src, i) => (
+              <img key={i} src={src} alt="Inside the Jersey Fit factory" loading="lazy" width={1024} height={768}
+                className="aspect-video w-full rounded-2xl border border-border object-cover" />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CUSTOMERS */}
+      <section className="shell py-16">
+        <SectionTitle kicker="Our Customers" title="Clubs that wear Jersey Fit" />
+        <div className="flex flex-wrap justify-center gap-3">
+          {CLUBS.map((c) => (
+            <span key={c} className="rounded-full border border-border bg-surface/60 px-5 py-2.5 text-sm font-extrabold uppercase tracking-wide text-muted-foreground">
+              {c}
+            </span>
+          ))}
+        </div>
+      </section>
+
+      {/* REVIEWS */}
+      <section className="py-16">
+        <div className="shell">
+          <SectionTitle kicker="Customer Reviews" title="4.8 average from 2,300+ squads" sub="Hover to pause the reel." />
+        </div>
+        <ReviewMarquee />
+      </section>
+    </>
   );
 }
