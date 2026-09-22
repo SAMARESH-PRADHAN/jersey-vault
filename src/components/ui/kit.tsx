@@ -37,7 +37,7 @@ export function Button({ className, variant, size, ...props }: ButtonProps) {
 /* ----------------------------- Input ----------------------------- */
 interface FieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label: string;
-  error?: string | null;
+  error?: string | null | undefined;
 }
 
 export function Input({ label, error, id, className, ...props }: FieldProps) {
@@ -68,7 +68,7 @@ export function Textarea({
   id,
   className,
   ...props
-}: React.TextareaHTMLAttributes<HTMLTextAreaElement> & { label: string; error?: string | null }) {
+}: React.TextareaHTMLAttributes<HTMLTextAreaElement> & { label: string; error?: string | null | undefined }) {
   const fieldId = id ?? `t-${label.toLowerCase().replace(/\s+/g, "-")}`;
   return (
     <div className="w-full">

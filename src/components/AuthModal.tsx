@@ -5,6 +5,7 @@ import { Button, Input, Modal } from "@/components/ui/kit";
 import { useApp } from "@/store/app";
 
 type Tab = "login" | "signup";
+interface Errs { name?: string; phone?: string; email?: string; password?: string; form?: string }
 
 const emailOk = (v: string) => /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(v);
 const phoneOk = (v: string) => /^[6-9]\d{9}$/.test(v);
@@ -14,7 +15,7 @@ export function AuthModal() {
   const navigate = useNavigate();
   const [tab, setTab] = useState<Tab>("login");
   const [form, setForm] = useState({ name: "", email: "", phone: "", password: "" });
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [errors, setErrors] = useState<Errs>({});
   const [busy, setBusy] = useState(false);
 
   const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement>) =>
@@ -29,7 +30,7 @@ export function AuthModal() {
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
-    const err: Record<string, string> = {};
+    const err: Errs = {};
     if (tab === "signup") {
       if (form.name.trim().length < 3) err.name = "Enter your full name.";
       if (!phoneOk(form.phone)) err.phone = "Enter a valid 10-digit mobile number.";
