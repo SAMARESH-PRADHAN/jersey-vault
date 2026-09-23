@@ -1,0 +1,388 @@
+import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { motion } from "framer-motion";
+import { ChevronLeft, ChevronRight, Minus, Plus, ShoppingCart, Upload, X } from "lucide-react";
+import { toast } from "sonner";
+import { Button, Card, Stars } from "@/components/ui/kit";
+import { ProductCard } from "@/components/ProductCard";
+import { DESIGN_GUIDELINES, WASH_CARE } from "@/data/content";
+import { PRINT_CHARGES, PRODUCTS, getProduct } from "@/data/products";
+import { inr, uid } from "@/lib/storage";
+import { useApp } from "@/store/app";
+import { SIZES, type PersonRow, type PrintCategory, type PrintType, type Size } from "@/types";
+
+export const Route = createFileRoute("/product/$productId")({
+  loader: ({ params }) => {
+    const product = getProduct(params.productId);
+    if (!product) throw notFound();
+    return { product };
+  },
+  head: ({ loaderData }) => {
+    if (!loaderData) return { meta: [{ title: "Jersey not found — Jersey Fit" }, { name: "robots", content: "noindex" }] };
+    const p = loaderData.product;
+    return {
+      meta: [
+        { title: `${p.name} — Jersey Fit` },
+        { name: "description", content: `${p.name} (${p.code}) in ${p.material}. ${p.description}` },
+        { property: "og:title", content: `${p.name} — Jersey Fit` },
+        { property: "og:description", content: p.description },
+        { property: "og:type", content: "product" },
+      ],
+    };
+  },
+  component: ProductDetail,
+});
+
+type Tab = "wash" | "overview" | "design";
+
+function ProductDetail() {
+  const { product } = Route.useLoaderData();
+  const { user, openAuth, addToCart, productReviews } = useApp();
+  const navigate = useNavigate();
+
+  const [active, setActive] = useState(0);
+  const [zoom, setZoom] = useState(false);
+  const [printType, setPrintType] = useState<PrintType>("Sublimation Print");
+  const [cats, setCats] = useState<PrintCategory[]>([]);
+  const [logo, setLogo] = useState<string | undefined>(undefined);
+  const [qty, setQty] = useState<Record<string, number>>({});
+  const [rows, setRows] = useState<Record<string, { name: string; number: string }>>({});
+  const [note, setNote] = useState("");
+  const [tab, setTab] = useState<Tab>("overview");
+  const [errors, setErrors] = useState<string[]>([]);
+  const railRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setActive(0); setQty({}); setRows({}); setCats([]); setLogo(undefined); setNote("");
+  }, [product.id]);
+
+  const needsRows = cats.includes("Name") || cats.includes("Number");
+  const totalQty = Object.values(qty).reduce((a, b) => a + b, 0);
+  const perUnitPrint = cats.reduce((s, c) => s + PRINT_CHARGES[c], 0);
+  const total = totalQty * (product.price + perUnitPrint);
+
+  const rowKeys = useMemo(() => {
+    const keys: { key: string; size: Size }[] = [];
+    SIZES.forEach((s) => {
+      for (let i = 0; i < (qty[s] ?? 0); i++) keys.push({ key: `${s}-${i}`, size: s });
+    });
+    return keys;
+  }, [qty]);
+
+  const reviews = productReviews(product.id);
+  const avg = reviews.length ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length : product.rating;
+  const related = PRODUCTS.filter((p) => p.id !== product.id && p.category === product.category).slice(0, 6);
+
+  const toggleCat = (c: PrintCategory) =>
+    setCats((l) => (l.includes(c) ? l.filter((x) => x !== c) : [...l, c]));
+
+  const step = (s: Size, d: number) =>
+    setQty((q) => ({ ...q, [s]: Math.max(0, (q[s] ?? 0) + d) }));
+
+  const onLogo = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) return toast.error("Please upload an image file.");
+    if (file.size > 2_000_000) return toast.error("Logo must be under 2 MB.");
+    const reader = new FileReader();
+    reader.onload = () => setLogo(String(reader.result));
+    reader.readAsDataURL(file);
+  };
+
+  const submit = () => {
+    const errs: string[] = [];
+    if (totalQty === 0) errs.push("Select at least one size and quantity.");
+    if (cats.includes("Logo") && !logo) errs.push("Upload a logo image or uncheck Logo.");
+    if (needsRows) {
+      const missing = rowKeys.some(({ key }) => {
+        const r = rows[key];
+        if (cats.includes("Name") && !r?.name?.trim()) return true;
+        if (cats.includes("Number") && !r?.number?.trim()) return true;
+        return false;
+      });
+      if (missing) errs.push("Fill in the name and number for every unit.");
+    }
+    setErrors(errs);
+    if (errs.length) return;
+
+    if (!user) {
+      openAuth(`/product/${product.id}`);
+      return;
+    }
+
+    const personRows: PersonRow[] = needsRows
+      ? rowKeys.map(({ key, size }) => ({
+          key, size,
+          name: rows[key]?.name?.trim() ?? "",
+          number: rows[key]?.number?.trim() ?? "",
+        }))
+      : [];
+
+    addToCart({
+      id: uid("ci"),
+      productId: product.id,
+      name: product.name,
+      code: product.code,
+      image: product.images[0]!,
+      unitPrice: product.price + perUnitPrint,
+      printType,
+      printCategories: cats,
+      ...(logo ? { logo } : {}),
+      sizes: SIZES.filter((s) => (qty[s] ?? 0) > 0).map((s) => ({ size: s, qty: qty[s]! })),
+      rows: personRows,
+      note,
+      totalQty,
+      lineTotal: total,
+    });
+    navigate({ to: "/cart" });
+  };
+
+  const scrollRail = (d: number) => railRef.current?.scrollBy({ left: d * 280, behavior: "smooth" });
+
+  return (
+    <div className="shell py-10">
+      <nav className="mb-6 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+        <Link to="/" className="hover:text-foreground">Home</Link> / <Link to="/shop" className="hover:text-foreground">Shop</Link> / <span className="text-lime">{product.code}</span>
+      </nav>
+
+      <div className="grid gap-8 lg:grid-cols-2">
+        {/* gallery */}
+        <div>
+          <button onClick={() => setZoom((z) => !z)} aria-label="Toggle image zoom"
+            className="panel block w-full overflow-hidden p-0">
+            <img src={product.images[active]} alt={`${product.name} view ${active + 1}`} width={1024} height={1024}
+              className={`aspect-square w-full object-cover transition-transform duration-500 ${zoom ? "scale-150" : "scale-100"}`} />
+          </button>
+          <div className="mt-3 grid grid-cols-4 gap-3">
+            {product.images.map((src, i) => (
+              <button key={i} onClick={() => setActive(i)} aria-label={`View image ${i + 1}`}
+                className={`overflow-hidden rounded-xl border-2 ${i === active ? "border-primary" : "border-border"}`}>
+                <img src={src} alt="" loading="lazy" width={200} height={200} className="aspect-square w-full object-cover" />
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* config */}
+        <div>
+          <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">{product.code}</p>
+          <h1 className="mt-1 text-3xl sm:text-4xl">{product.name}</h1>
+          <div className="mt-3 flex items-center gap-3">
+            <Stars rating={avg} size={16} />
+            <span className="text-xs text-muted-foreground">{avg.toFixed(1)} · {reviews.length} review{reviews.length === 1 ? "" : "s"}</span>
+          </div>
+          <div className="mt-4 flex items-baseline gap-3">
+            <span className="display text-3xl text-gradient">{inr(product.price)}</span>
+            <span className="text-sm text-muted-foreground line-through">{inr(product.mrp)}</span>
+            <span className="text-xs font-black uppercase text-lime">per piece</span>
+          </div>
+          <p className="mt-4 text-sm text-muted-foreground">{product.description}</p>
+          <p className="mt-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">Material: <span className="text-foreground">{product.material}</span></p>
+
+          {/* print type */}
+          <fieldset className="mt-6">
+            <legend className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Print type</legend>
+            <div className="mt-2 grid grid-cols-2 gap-3">
+              {(["Sublimation Print", "DTF Print"] as PrintType[]).map((t) => (
+                <label key={t} className={`cursor-pointer rounded-xl border-2 p-3 text-sm font-bold ${printType === t ? "border-primary bg-primary/10" : "border-border"}`}>
+                  <input type="radio" name="printType" value={t} checked={printType === t}
+                    onChange={() => setPrintType(t)} className="mr-2 accent-[var(--color-primary)]" />
+                  {t}
+                </label>
+              ))}
+            </div>
+          </fieldset>
+
+          {/* print category */}
+          <fieldset className="mt-5">
+            <legend className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Print category (add-ons)</legend>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {(["Logo", "Name", "Number"] as PrintCategory[]).map((c) => (
+                <label key={c} className={`cursor-pointer rounded-full border-2 px-4 py-2 text-sm font-bold ${cats.includes(c) ? "border-lime bg-lime/10 text-lime" : "border-border"}`}>
+                  <input type="checkbox" checked={cats.includes(c)} onChange={() => toggleCat(c)} className="mr-2 accent-[var(--color-lime)]" />
+                  {c} +{inr(PRINT_CHARGES[c])}
+                </label>
+              ))}
+            </div>
+          </fieldset>
+
+          {/* logo upload */}
+          {cats.includes("Logo") ? (
+            <div className="mt-5 panel p-4">
+              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Upload logo — applies to all sizes</p>
+              <div className="mt-3 flex items-center gap-4">
+                <label className="inline-flex h-11 cursor-pointer items-center gap-2 rounded-full border border-border px-5 text-sm font-extrabold uppercase">
+                  <Upload className="h-4 w-4" /> Choose file
+                  <input type="file" accept="image/*" className="sr-only" onChange={onLogo} />
+                </label>
+                {logo ? (
+                  <span className="relative">
+                    <img src={logo} alt="Logo preview" className="h-16 w-16 rounded-xl border border-border bg-background object-contain p-1" />
+                    <button onClick={() => setLogo(undefined)} aria-label="Remove logo"
+                      className="absolute -right-2 -top-2 grid h-6 w-6 place-items-center rounded-full bg-destructive text-destructive-foreground">
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
+                ) : <span className="text-xs text-muted-foreground">PNG with transparent background works best.</span>}
+              </div>
+            </div>
+          ) : null}
+
+          {/* sizes */}
+          <div className="mt-6">
+            <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Sizes & quantity</p>
+            <div className="mt-3 grid gap-2 sm:grid-cols-2">
+              {SIZES.map((s) => (
+                <div key={s} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 rounded-xl border border-border bg-surface/50 px-3 py-2">
+                  <span className="text-sm font-extrabold">{s}</span>
+                  <span className="flex shrink-0 items-center gap-1">
+                    <button onClick={() => step(s, -1)} aria-label={`Decrease ${s} quantity`}
+                      className="grid h-8 w-8 place-items-center rounded-full border border-border"><Minus className="h-3 w-3" /></button>
+                    <input aria-label={`${s} quantity`} value={qty[s] ?? 0} inputMode="numeric"
+                      onChange={(e) => setQty({ ...qty, [s]: Math.max(0, Number(e.target.value) || 0) })}
+                      className="h-8 w-12 rounded-lg border border-input bg-background/60 text-center text-sm" />
+                    <button onClick={() => step(s, 1)} aria-label={`Increase ${s} quantity`}
+                      className="grid h-8 w-8 place-items-center rounded-full bg-heat text-primary-foreground"><Plus className="h-3 w-3" /></button>
+                  </span>
+                </div>
+              ))}
+            </div>
+            <p className="mt-3 text-sm font-extrabold">Total quantity: <span className="text-lime">{totalQty}</span></p>
+          </div>
+
+          {/* name / number rows */}
+          {needsRows && totalQty > 0 ? (
+            <div className="mt-6 panel p-4">
+              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Player details — one row per piece</p>
+              <div className="mt-3 max-h-80 space-y-2 overflow-y-auto pr-1">
+                {rowKeys.map(({ key, size }, i) => (
+                  <div key={key} className="grid grid-cols-[42px_minmax(0,1fr)_84px] items-center gap-2">
+                    <span className="text-xs font-black text-muted-foreground">{size}·{i + 1}</span>
+                    {cats.includes("Name") ? (
+                      <input placeholder="Player name" aria-label={`Name for ${size} piece ${i + 1}`} maxLength={14}
+                        value={rows[key]?.name ?? ""}
+                        onChange={(e) => setRows({ ...rows, [key]: { number: rows[key]?.number ?? "", name: e.target.value } })}
+                        className="h-10 w-full rounded-xl border border-input bg-background/60 px-3 text-sm" />
+                    ) : <span className="text-xs text-muted-foreground">No name print</span>}
+                    {cats.includes("Number") ? (
+                      <input placeholder="No." aria-label={`Number for ${size} piece ${i + 1}`} maxLength={2} inputMode="numeric"
+                        value={rows[key]?.number ?? ""}
+                        onChange={(e) => setRows({ ...rows, [key]: { name: rows[key]?.name ?? "", number: e.target.value.replace(/\D/g, "") } })}
+                        className="h-10 w-full rounded-xl border border-input bg-background/60 px-3 text-center text-sm" />
+                    ) : <span />}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
+          {/* note */}
+          <div className="mt-5">
+            <label htmlFor="note" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Note for our team</label>
+            <textarea id="note" rows={3} value={note} onChange={(e) => setNote(e.target.value)}
+              placeholder="Match date, colour tweaks, sponsor placement…"
+              className="mt-2 w-full rounded-xl border border-input bg-background/60 p-3 text-sm" />
+          </div>
+
+          {/* bill */}
+          <Card className="mt-6">
+            <div className="flex items-end justify-between gap-4">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Live total bill</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {totalQty} × {inr(product.price)}{perUnitPrint ? ` + ${inr(perUnitPrint)} print` : ""}
+                </p>
+              </div>
+              <span className="display text-3xl text-gradient">{inr(total)}</span>
+            </div>
+            {errors.length ? (
+              <ul className="mt-3 space-y-1 text-xs font-semibold text-destructive">
+                {errors.map((e) => <li key={e}>• {e}</li>)}
+              </ul>
+            ) : null}
+            <Button size="lg" className="mt-4 w-full" onClick={submit}>
+              <ShoppingCart className="h-4 w-4" /> {user ? "Add to Cart" : "Login & Add to Cart"}
+            </Button>
+          </Card>
+        </div>
+      </div>
+
+      {/* tabs */}
+      <section className="mt-16">
+        <div className="flex flex-wrap gap-2">
+          {([["overview", "Product Overview"], ["wash", "Wash Care"], ["design", "Design Guidelines"]] as [Tab, string][]).map(([k, label]) => (
+            <button key={k} onClick={() => setTab(k)} aria-pressed={tab === k}
+              className={`h-11 rounded-full px-5 text-xs font-extrabold uppercase tracking-wide sm:text-sm ${tab === k ? "bg-heat text-primary-foreground" : "border border-border text-muted-foreground"}`}>
+              {label}
+            </button>
+          ))}
+        </div>
+        <Card className="mt-4">
+          {tab === "overview" ? (
+            <div className="space-y-3 text-sm text-muted-foreground">
+              <p>{product.description}</p>
+              <p>Fabric: {product.material}. Fit: regular athletic. Neck: rib crew. Sleeve: short set-in.</p>
+              <p>Printed and stitched at our Tirupur unit with a 9-point quality check before dispatch.</p>
+            </div>
+          ) : null}
+          {tab === "wash" ? (
+            <ul className="space-y-2 text-sm text-muted-foreground">
+              {WASH_CARE.map((w) => <li key={w}>• {w}</li>)}
+            </ul>
+          ) : null}
+          {tab === "design" ? (
+            <ul className="space-y-2 text-sm text-muted-foreground">
+              {DESIGN_GUIDELINES.map((d) => <li key={d}>• {d}</li>)}
+            </ul>
+          ) : null}
+        </Card>
+      </section>
+
+      {/* reviews */}
+      <section className="mt-16">
+        <h2 className="text-2xl sm:text-3xl">Product <span className="text-gradient">Reviews</span></h2>
+        <div className="mt-5 grid gap-4 lg:grid-cols-[240px_1fr]">
+          <Card className="text-center">
+            <span className="display text-5xl text-gradient">{avg.toFixed(1)}</span>
+            <div className="mt-2 flex justify-center"><Stars rating={avg} size={18} /></div>
+            <p className="mt-2 text-xs text-muted-foreground">{reviews.length} verified review{reviews.length === 1 ? "" : "s"}</p>
+          </Card>
+          <div className="space-y-3">
+            {reviews.length === 0 ? (
+              <Card className="text-sm text-muted-foreground">No reviews yet for this jersey. Order it and be the first.</Card>
+            ) : reviews.map((r) => (
+              <Card key={r.id}>
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-sm font-extrabold">{r.user}</span>
+                  <span className="text-xs text-muted-foreground">{new Date(r.date).toLocaleDateString("en-IN")}</span>
+                </div>
+                <div className="mt-1"><Stars rating={r.rating} /></div>
+                <p className="mt-2 text-sm text-muted-foreground">{r.text}</p>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* related */}
+      {related.length ? (
+        <section className="mt-16">
+          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4">
+            <h2 className="text-2xl sm:text-3xl">Related <span className="text-gradient">Jerseys</span></h2>
+            <div className="flex shrink-0 gap-2">
+              <button onClick={() => scrollRail(-1)} aria-label="Scroll left" className="grid h-10 w-10 place-items-center rounded-full border border-border"><ChevronLeft className="h-4 w-4" /></button>
+              <button onClick={() => scrollRail(1)} aria-label="Scroll right" className="grid h-10 w-10 place-items-center rounded-full border border-border"><ChevronRight className="h-4 w-4" /></button>
+            </div>
+          </div>
+          <div ref={railRef} className="mt-5 flex snap-x gap-4 overflow-x-auto pb-4">
+            {related.map((p) => (
+              <motion.div key={p.id} className="w-56 shrink-0 snap-start sm:w-64">
+                <ProductCard product={p} />
+              </motion.div>
+            ))}
+          </div>
+        </section>
+      ) : null}
+    </div>
+  );
+}

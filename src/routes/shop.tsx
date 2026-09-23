@@ -10,8 +10,8 @@ import { inr } from "@/lib/storage";
 type Sort = "featured" | "low" | "high" | "rating";
 
 export const Route = createFileRoute("/shop")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    category: (typeof search.category === "string" ? search.category : "all") as CategorySlug | "all",
+  validateSearch: (search: Record<string, unknown>): { category?: CategorySlug | "all" } => ({
+    category: (typeof search["category"] === "string" ? search["category"] : "all") as CategorySlug | "all",
   }),
   head: () => ({
     meta: [
@@ -28,7 +28,7 @@ const PAGE = 8;
 const MAXP = 1200;
 
 function Shop() {
-  const { category } = Route.useSearch();
+  const category = Route.useSearch().category ?? "all";
   const navigate = useNavigate();
   const [range, setRange] = useState<[number, number]>([0, MAXP]);
   const [sort, setSort] = useState<Sort>("featured");
