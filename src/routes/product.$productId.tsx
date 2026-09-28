@@ -243,20 +243,53 @@ function ProductDetail() {
           <div className="mt-6">
             <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Sizes & quantity</p>
             <div className="mt-3 grid gap-2 sm:grid-cols-2">
-              {SIZES.map((s) => (
-                <div key={s} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 rounded-xl border border-border bg-surface/50 px-3 py-2">
-                  <span className="text-sm font-extrabold">{s}</span>
-                  <span className="flex shrink-0 items-center gap-1">
-                    <button onClick={() => step(s, -1)} aria-label={`Decrease ${s} quantity`}
-                      className="grid h-8 w-8 place-items-center rounded-full border border-border"><Minus className="h-3 w-3" /></button>
-                    <input aria-label={`${s} quantity`} value={qty[s] ?? 0} inputMode="numeric"
-                      onChange={(e) => setQty({ ...qty, [s]: Math.max(0, Number(e.target.value) || 0) })}
-                      className="h-8 w-12 rounded-lg border border-input bg-background/60 text-center text-sm" />
-                    <button onClick={() => step(s, 1)} aria-label={`Increase ${s} quantity`}
-                      className="grid h-8 w-8 place-items-center rounded-full bg-heat text-primary-foreground"><Plus className="h-3 w-3" /></button>
-                  </span>
-                </div>
-              ))}
+              {SIZES.map((s) => {
+                const n = qty[s] ?? 0;
+                return (
+                  <div key={s} className="self-start rounded-xl border border-border bg-surface/50 p-2">
+                    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 px-1">
+                      <span className="text-sm font-extrabold">{s}</span>
+                      <span className="flex shrink-0 items-center gap-1">
+                        <button onClick={() => step(s, -1)} aria-label={`Decrease ${s} quantity`}
+                          className="grid h-8 w-8 place-items-center rounded-full border border-border"><Minus className="h-3 w-3" /></button>
+                        <input aria-label={`${s} quantity`} value={n} inputMode="numeric"
+                          onChange={(e) => setQty({ ...qty, [s]: Math.max(0, Number(e.target.value) || 0) })}
+                          className="h-8 w-12 rounded-lg border border-input bg-background/60 text-center text-sm" />
+                        <button onClick={() => step(s, 1)} aria-label={`Increase ${s} quantity`}
+                          className="grid h-8 w-8 place-items-center rounded-full bg-heat text-primary-foreground"><Plus className="h-3 w-3" /></button>
+                      </span>
+                    </div>
+                    {/* player rows for this size — shown directly under its counter */}
+                    {printType !== "No Print" && needsRows && n > 0 ? (
+                      <div className="mt-2 space-y-1.5 border-t border-border pt-2">
+                        <p className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">
+                          Player details for {s} — {n} piece{n > 1 ? "s" : ""}
+                        </p>
+                        {Array.from({ length: n }, (_, i) => {
+                          const key = `${s}-${i}`;
+                          return (
+                            <div key={key} className="grid grid-cols-[24px_minmax(0,1fr)_64px] items-center gap-2">
+                              <span className="text-xs font-black text-muted-foreground">{i + 1}.</span>
+                              {cats.includes("Name") ? (
+                                <input placeholder="Player name" aria-label={`Name for ${s} piece ${i + 1}`} maxLength={14}
+                                  value={rows[key]?.name ?? ""}
+                                  onChange={(e) => setRows({ ...rows, [key]: { number: rows[key]?.number ?? "", name: e.target.value } })}
+                                  className="h-9 w-full rounded-lg border border-input bg-background/60 px-3 text-sm" />
+                              ) : <span className="text-xs text-muted-foreground">— no name —</span>}
+                              {cats.includes("Number") ? (
+                                <input placeholder="No." aria-label={`Number for ${s} piece ${i + 1}`} maxLength={2} inputMode="numeric"
+                                  value={rows[key]?.number ?? ""}
+                                  onChange={(e) => setRows({ ...rows, [key]: { name: rows[key]?.name ?? "", number: e.target.value.replace(/\D/g, "") } })}
+                                  className="h-9 w-full rounded-lg border border-input bg-background/60 px-2 text-center text-sm" />
+                              ) : <span />}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : null}
+                  </div>
+                );
+              })}
             </div>
             <p className="mt-3 text-sm font-extrabold">Total quantity: <span className="text-lime">{totalQty}</span></p>
             {printType === "No Print" ? (
