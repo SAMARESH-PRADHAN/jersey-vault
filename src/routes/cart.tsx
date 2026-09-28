@@ -53,11 +53,15 @@ function CartPage() {
             <motion.div key={item.id} layout initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
               <Card>
                 <div className="grid grid-cols-[88px_minmax(0,1fr)_auto] gap-4">
-                  <img src={item.image} alt={item.name} loading="lazy" width={200} height={200}
-                    className="aspect-square w-22 rounded-xl border border-border object-cover" />
+                  <Link to="/product/$productId" params={{ productId: item.productId }} className="group block w-22" aria-label={`View ${item.name}`}>
+                    <img src={item.image} alt={item.name} loading="lazy" width={200} height={200}
+                      className="aspect-square w-full rounded-xl border border-border object-cover transition group-hover:border-primary" />
+                  </Link>
                   <div className="min-w-0">
                     <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{item.code}</p>
-                    <h2 className="truncate text-sm font-extrabold normal-case tracking-normal" style={{ fontFamily: "var(--font-sans)" }}>{item.name}</h2>
+                    <Link to="/product/$productId" params={{ productId: item.productId }}
+                      className="block truncate text-sm font-extrabold normal-case tracking-normal transition hover:text-primary"
+                      style={{ fontFamily: "var(--font-sans)" }}>{item.name}</Link>
                     <p className="mt-1 text-xs text-muted-foreground">
                       {item.printType}
                       {item.printCategories.length ? ` · ${item.printCategories.join(", ")}` : ""}
