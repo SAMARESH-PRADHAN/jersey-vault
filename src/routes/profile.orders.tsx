@@ -100,9 +100,13 @@ function Orders() {
               <ul className="mt-5 space-y-3">
                 {o.items.map((i) => (
                   <li key={i.id} className="grid grid-cols-[56px_minmax(0,1fr)_auto] items-center gap-3">
-                    <img src={i.image} alt={i.name} loading="lazy" width={120} height={120} className="aspect-square w-14 rounded-xl border border-border object-cover" />
+                    <Link to="/product/$productId" params={{ productId: i.productId }} className="group block w-14" aria-label={`View ${i.name}`}>
+                      <img src={i.image} alt={i.name} loading="lazy" width={120} height={120}
+                        className="aspect-square w-full rounded-xl border border-border object-cover transition group-hover:border-primary" />
+                    </Link>
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-extrabold">{i.name}</p>
+                      <Link to="/product/$productId" params={{ productId: i.productId }}
+                        className="block truncate text-sm font-extrabold transition hover:text-primary">{i.name}</Link>
                       <p className="text-xs text-muted-foreground">{i.printType} · {i.totalQty} pcs · {i.sizes.map((s) => `${s.size}×${s.qty}`).join(" ")}</p>
                     </div>
                     {o.statusIndex === 4 ? (
