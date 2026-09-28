@@ -82,8 +82,14 @@ function ProductDetail() {
   const onLogo = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (!file.type.startsWith("image/")) return toast.error("Please upload an image file.");
-    if (file.size > 2_000_000) return toast.error("Logo must be under 2 MB.");
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please upload an image file.");
+      return;
+    }
+    if (file.size > 2_000_000) {
+      toast.error("Logo must be under 2 MB.");
+      return;
+    }
     const reader = new FileReader();
     reader.onload = () => setLogo(String(reader.result));
     reader.readAsDataURL(file);
