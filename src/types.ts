@@ -17,7 +17,7 @@ export interface Product {
   tag?: string;
 }
 
-export type PrintType = "Sublimation Print" | "DTF Print";
+export type PrintType = "Sublimation Print" | "DTF Print" | "No Print";
 export type PrintCategory = "Logo" | "Name" | "Number";
 
 export const SIZES = ["XS", "S", "M", "L", "XL", "2XL", "3XL"] as const;

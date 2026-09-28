@@ -182,32 +182,43 @@ function ProductDetail() {
           {/* print type */}
           <fieldset className="mt-6">
             <legend className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Print type</legend>
-            <div className="mt-2 grid grid-cols-2 gap-3">
-              {(["Sublimation Print", "DTF Print"] as PrintType[]).map((t) => (
+            <div className="mt-2 grid gap-3 sm:grid-cols-3">
+              {(["Sublimation Print", "DTF Print", "No Print"] as PrintType[]).map((t) => (
                 <label key={t} className={`cursor-pointer rounded-xl border-2 p-3 text-sm font-bold ${printType === t ? "border-primary bg-primary/10" : "border-border"}`}>
                   <input type="radio" name="printType" value={t} checked={printType === t}
-                    onChange={() => setPrintType(t)} className="mr-2 accent-[var(--color-primary)]" />
+                    onChange={() => {
+                      setPrintType(t);
+                      if (t === "No Print") {
+                        // No print = plain jersey: drop every add-on and per-piece data.
+                        setCats([]);
+                        setLogo(undefined);
+                      }
+                    }} className="mr-2 accent-[var(--color-primary)]" />
                   {t}
                 </label>
               ))}
             </div>
           </fieldset>
 
-          {/* print category */}
-          <fieldset className="mt-5">
-            <legend className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Print category (add-ons)</legend>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {(["Logo", "Name", "Number"] as PrintCategory[]).map((c) => (
-                <label key={c} className={`cursor-pointer rounded-full border-2 px-4 py-2 text-sm font-bold ${cats.includes(c) ? "border-lime bg-lime/10 text-lime" : "border-border"}`}>
-                  <input type="checkbox" checked={cats.includes(c)} onChange={() => toggleCat(c)} className="mr-2 accent-[var(--color-lime)]" />
-                  {c} +{inr(PRINT_CHARGES[c])}
-                </label>
-              ))}
-            </div>
-          </fieldset>
+          {/* print category — hidden entirely for No Print */}
+          {printType !== "No Print" ? (
+            <fieldset className="mt-5">
+              <legend className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Print category (add-ons)</legend>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {(["Logo", "Name", "Number"] as PrintCategory[]).map((c) => (
+                  <label key={c} className={`cursor-pointer rounded-full border-2 px-4 py-2 text-sm font-bold ${cats.includes(c) ? "border-lime bg-lime/10 text-lime" : "border-border"}`}>
+                    <input type="checkbox" checked={cats.includes(c)} onChange={() => toggleCat(c)} className="mr-2 accent-[var(--color-lime)]" />
+                    {c} +{inr(PRINT_CHARGES[c])}
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+          ) : (
+            <p className="mt-5 text-xs font-bold uppercase tracking-wider text-lime">Plain jersey — no print add-ons.</p>
+          )}
 
           {/* logo upload */}
-          {cats.includes("Logo") ? (
+          {printType !== "No Print" && cats.includes("Logo") ? (
             <div className="mt-5 panel p-4">
               <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Upload logo — applies to all sizes</p>
               <div className="mt-3 flex items-center gap-4">
@@ -248,33 +259,10 @@ function ProductDetail() {
               ))}
             </div>
             <p className="mt-3 text-sm font-extrabold">Total quantity: <span className="text-lime">{totalQty}</span></p>
+            {printType === "No Print" ? (
+              <p className="mt-1 text-xs text-muted-foreground">Player details are not needed for plain (no print) jerseys.</p>
+            ) : null}
           </div>
-
-          {/* name / number rows */}
-          {needsRows && totalQty > 0 ? (
-            <div className="mt-6 panel p-4">
-              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Player details — one row per piece</p>
-              <div className="mt-3 max-h-80 space-y-2 overflow-y-auto pr-1">
-                {rowKeys.map(({ key, size }, i) => (
-                  <div key={key} className="grid grid-cols-[42px_minmax(0,1fr)_84px] items-center gap-2">
-                    <span className="text-xs font-black text-muted-foreground">{size}·{i + 1}</span>
-                    {cats.includes("Name") ? (
-                      <input placeholder="Player name" aria-label={`Name for ${size} piece ${i + 1}`} maxLength={14}
-                        value={rows[key]?.name ?? ""}
-                        onChange={(e) => setRows({ ...rows, [key]: { number: rows[key]?.number ?? "", name: e.target.value } })}
-                        className="h-10 w-full rounded-xl border border-input bg-background/60 px-3 text-sm" />
-                    ) : <span className="text-xs text-muted-foreground">No name print</span>}
-                    {cats.includes("Number") ? (
-                      <input placeholder="No." aria-label={`Number for ${size} piece ${i + 1}`} maxLength={2} inputMode="numeric"
-                        value={rows[key]?.number ?? ""}
-                        onChange={(e) => setRows({ ...rows, [key]: { name: rows[key]?.name ?? "", number: e.target.value.replace(/\D/g, "") } })}
-                        className="h-10 w-full rounded-xl border border-input bg-background/60 px-3 text-center text-sm" />
-                    ) : <span />}
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : null}
 
           {/* note */}
           <div className="mt-5">
