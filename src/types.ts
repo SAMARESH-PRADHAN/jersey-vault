@@ -1,7 +1,16 @@
 export type CategorySlug =
   | "all-over-print"
   | "front-print"
-  | "back-print";
+  | "back-print"
+  | "cricket"
+  | "football"
+  | "volleyball"
+  | "basketball"
+  | "kabaddi"
+  | "ganesh-puja"
+  | "morning-walk"
+  | "marathon"
+  | "top-wear";
 
 export interface Product {
   id: string;
@@ -15,6 +24,7 @@ export interface Product {
   images: string[];
   rating: number;
   tag?: string;
+  isExclusiveTopWear?: boolean;
 }
 
 export type PrintType = "Sublimation Print" | "DTF Print" | "No Print";
