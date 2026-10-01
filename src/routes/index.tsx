@@ -7,7 +7,7 @@ import { HeroSlider } from "@/components/HeroSlider";
 import { ReviewMarquee } from "@/components/ReviewMarquee";
 import { ProductCard } from "@/components/ProductCard";
 import { CLUBS, FACTORY_STATS, SERVICES } from "@/data/content";
-import { PRODUCTS } from "@/data/products";
+import { CATEGORIES, PRODUCTS } from "@/data/products";
 import j1 from "@/assets/jersey-1.jpg";
 import j2 from "@/assets/jersey-2.jpg";
 import j3 from "@/assets/jersey-3.jpg";
@@ -62,6 +62,51 @@ function Home() {
   return (
     <>
       <HeroSlider />
+
+      {/* CUSTOM TEAM COLLECTIONS */}
+      <section className="shell py-16 sm:py-20">
+        <SectionTitle kicker="Custom Team Jersey" title="Made for every kind of team" sub="Choose your sport, event or print style and start building a kit that belongs to your group." />
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {CATEGORIES.map((category, index) => (
+            <motion.div key={category.slug} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: (index % 4) * 0.05 }}>
+              <Link to="/shop" search={{ category: category.slug }} className="group relative block aspect-4/3 overflow-hidden rounded-2xl border border-border">
+                <img src={category.image} alt={category.label} loading="lazy" width={1024} height={768} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
+                <div className="absolute inset-0 bg-background/65 transition-colors group-hover:bg-background/50" />
+                <div className="absolute inset-0 flex flex-col justify-end p-5">
+                  <span className="mb-auto w-fit rounded-full bg-lime px-3 py-1 text-[10px] font-black uppercase tracking-wider text-lime-foreground">Custom collection</span>
+                  <h3 className="text-xl sm:text-2xl">{category.label}</h3>
+                  <p className="mt-1 line-clamp-2 text-xs text-foreground/80">{category.description}</p>
+                  <span className="mt-3 text-xs font-black uppercase tracking-wider text-lime">View collection →</span>
+                </div>
+              </Link>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* HOW IT WORKS */}
+      <section className="border-y border-border bg-surface/40 py-16">
+        <div className="shell">
+          <SectionTitle kicker="How It Works" title="From idea to match day" sub="A simple four-step path from your first pick to the finished squad kit." />
+          <div className="grid gap-3 md:grid-cols-4">
+            {[
+              { icon: Icons.Shirt, title: "Pick Jersey & Style", text: "Choose sublimation, DTF or plain." },
+              { icon: Icons.Users, title: "Add Squad Details", text: "Upload your logo, names and numbers per size." },
+              { icon: Icons.BadgeCheck, title: "Proof & Verification", text: "Review every detail before production." },
+              { icon: Icons.Truck, title: "Express Dispatch", text: "Track your finished kits to your doorstep." },
+            ].map(({ icon: Icon, title, text }, index) => (
+              <motion.div key={title} className="relative border-l-2 border-primary px-5 py-4 first:border-lime md:border-l md:border-t-2" initial={{ opacity: 0, x: -16 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: index * 0.08 }}>
+                <div className="flex items-center justify-between gap-4">
+                  <span className="grid h-11 w-11 place-items-center rounded-xl bg-heat"><Icon className="h-5 w-5 text-primary-foreground" /></span>
+                  <span className="display text-4xl text-muted">0{index + 1}</span>
+                </div>
+                <h3 className="mt-5 text-lg">{title}</h3>
+                <p className="mt-2 text-sm text-muted-foreground">{text}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* ABOUT */}
       <section id="about" className="shell scroll-mt-24 py-20">
