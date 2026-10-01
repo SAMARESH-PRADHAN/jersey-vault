@@ -20,6 +20,8 @@ export const Route = createFileRoute("/")({
       { name: "description", content: "Design and order custom sports jerseys: all over print, front print and back print. Bulk squad kits, 72-hour dispatch across India." },
       { property: "og:title", content: "Jersey Fit — Custom Sports Jerseys" },
       { property: "og:description", content: "Sublimation and DTF printed jerseys for clubs, schools and squads." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: Home,

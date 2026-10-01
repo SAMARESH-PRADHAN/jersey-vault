@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Check, SlidersHorizontal } from "lucide-react";
 import { Button, Card, ProductSkeleton } from "@/components/ui/kit";
@@ -21,6 +21,8 @@ export const Route = createFileRoute("/shop")({
       { name: "description", content: "Browse all over print, front print and back print sports jerseys. Filter by price, sort and customise with names, numbers and logos." },
       { property: "og:title", content: "Shop Custom Jerseys — Jersey Fit" },
       { property: "og:description", content: "All over print, front print and back print jerseys with live customisation." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: Shop,

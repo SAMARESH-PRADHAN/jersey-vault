@@ -51,14 +51,16 @@ function ProductDetail() {
   const [tab, setTab] = useState<Tab>("overview");
   const [errors, setErrors] = useState<string[]>([]);
   const railRef = useRef<HTMLDivElement>(null);
+  const isTopWear = product.isExclusiveTopWear || product.category === "top-wear";
 
   useEffect(() => {
     setActive(0); setQty({}); setRows({}); setCats([]); setLogo(undefined); setNote("");
-  }, [product.id]);
+    setPrintType(product.isExclusiveTopWear || product.category === "top-wear" ? "No Print" : "Sublimation Print");
+  }, [product.category, product.id, product.isExclusiveTopWear]);
 
   const needsRows = cats.includes("Name") || cats.includes("Number");
   const totalQty = Object.values(qty).reduce((a, b) => a + b, 0);
-  const perUnitPrint = cats.reduce((s, c) => s + PRINT_CHARGES[c], 0);
+  const perUnitPrint = isTopWear ? 0 : cats.reduce((s, c) => s + PRINT_CHARGES[c], 0);
   const total = totalQty * (product.price + perUnitPrint);
 
   const rowKeys = useMemo(() => {
@@ -77,7 +79,17 @@ function ProductDetail() {
     setCats((l) => (l.includes(c) ? l.filter((x) => x !== c) : [...l, c]));
 
   const step = (s: Size, d: number) =>
-    setQty((q) => ({ ...q, [s]: Math.max(0, (q[s] ?? 0) + d) }));
+    setQty((current) => {
+      const next = Math.max(0, (current[s] ?? 0) + d);
+      const otherTotal = Object.entries(current).reduce((sum, [size, amount]) => sum + (size === s ? 0 : amount), 0);
+      return { ...current, [s]: isTopWear ? Math.min(next, Math.max(0, 3 - otherTotal)) : next };
+    });
+
+  const setSizeQuantity = (s: Size, value: number) => {
+    const otherTotal = Object.entries(qty).reduce((sum, [size, amount]) => sum + (size === s ? 0 : amount), 0);
+    const next = Math.max(0, value || 0);
+    setQty({ ...qty, [s]: isTopWear ? Math.min(next, Math.max(0, 3 - otherTotal)) : next });
+  };
 
   const onLogo = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -98,8 +110,9 @@ function ProductDetail() {
   const submit = () => {
     const errs: string[] = [];
     if (totalQty === 0) errs.push("Select at least one size and quantity.");
-    if (cats.includes("Logo") && !logo) errs.push("Upload a logo image or uncheck Logo.");
-    if (needsRows) {
+    if (isTopWear && totalQty > 3) errs.push("Exclusive Top Wear is limited to 3 pieces per order.");
+    if (!isTopWear && cats.includes("Logo") && !logo) errs.push("Upload a logo image or uncheck Logo.");
+    if (!isTopWear && needsRows) {
       const missing = rowKeys.some(({ key }) => {
         const r = rows[key];
         if (cats.includes("Name") && !r?.name?.trim()) return true;
@@ -116,7 +129,7 @@ function ProductDetail() {
       return;
     }
 
-    const personRows: PersonRow[] = needsRows
+    const personRows: PersonRow[] = !isTopWear && needsRows
       ? rowKeys.map(({ key, size }) => ({
           key, size,
           name: rows[key]?.name?.trim() ?? "",
@@ -131,9 +144,9 @@ function ProductDetail() {
       code: product.code,
       image: product.images[0]!,
       unitPrice: product.price + perUnitPrint,
-      printType,
-      printCategories: cats,
-      ...(logo ? { logo } : {}),
+      printType: isTopWear ? "No Print" : printType,
+      printCategories: isTopWear ? [] : cats,
+      ...(!isTopWear && logo ? { logo } : {}),
       sizes: SIZES.filter((s) => (qty[s] ?? 0) > 0).map((s) => ({ size: s, qty: qty[s]! })),
       rows: personRows,
       note,
@@ -184,9 +197,10 @@ function ProductDetail() {
           </div>
           <p className="mt-4 text-sm text-muted-foreground">{product.description}</p>
           <p className="mt-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">Material: <span className="text-foreground">{product.material}</span></p>
+          {isTopWear ? <span className="mt-4 inline-flex rounded-full bg-accent px-4 py-2 text-xs font-black uppercase tracking-wider text-accent-foreground">Exclusive Ready-to-Wear</span> : null}
 
           {/* print type */}
-          <fieldset className="mt-6">
+          {!isTopWear ? <fieldset className="mt-6">
             <legend className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Print type</legend>
             <div className="mt-2 grid gap-3 sm:grid-cols-3">
               {(["Sublimation Print", "DTF Print", "No Print"] as PrintType[]).map((t) => (
@@ -204,10 +218,10 @@ function ProductDetail() {
                 </label>
               ))}
             </div>
-          </fieldset>
+          </fieldset> : null}
 
           {/* print category — hidden entirely for No Print */}
-          {printType !== "No Print" ? (
+          {!isTopWear && printType !== "No Print" ? (
             <fieldset className="mt-5">
               <legend className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Print category (add-ons)</legend>
               <div className="mt-2 flex flex-wrap gap-2">
@@ -224,7 +238,7 @@ function ProductDetail() {
           )}
 
           {/* logo upload */}
-          {printType !== "No Print" && cats.includes("Logo") ? (
+          {!isTopWear && printType !== "No Print" && cats.includes("Logo") ? (
             <div className="mt-5 panel p-4">
               <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Upload logo — applies to all sizes</p>
               <div className="mt-3 flex items-center gap-4">
@@ -259,14 +273,14 @@ function ProductDetail() {
                         <button onClick={() => step(s, -1)} aria-label={`Decrease ${s} quantity`}
                           className="grid h-8 w-8 place-items-center rounded-full border border-border"><Minus className="h-3 w-3" /></button>
                         <input aria-label={`${s} quantity`} value={n} inputMode="numeric"
-                          onChange={(e) => setQty({ ...qty, [s]: Math.max(0, Number(e.target.value) || 0) })}
+                          onChange={(e) => setSizeQuantity(s, Number(e.target.value))}
                           className="h-8 w-12 rounded-lg border border-input bg-background/60 text-center text-sm" />
                         <button onClick={() => step(s, 1)} aria-label={`Increase ${s} quantity`}
                           className="grid h-8 w-8 place-items-center rounded-full bg-heat text-primary-foreground"><Plus className="h-3 w-3" /></button>
                       </span>
                     </div>
                     {/* player rows for this size — shown directly under its counter */}
-                    {printType !== "No Print" && needsRows && n > 0 ? (
+                    {!isTopWear && printType !== "No Print" && needsRows && n > 0 ? (
                       <div className="mt-2 space-y-1.5 border-t border-border pt-2">
                         <p className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">
                           Player details for {s} — {n} piece{n > 1 ? "s" : ""}
@@ -298,7 +312,9 @@ function ProductDetail() {
               })}
             </div>
             <p className="mt-3 text-sm font-extrabold">Total quantity: <span className="text-lime">{totalQty}</span></p>
-            {printType === "No Print" ? (
+            {isTopWear ? (
+              <p className="mt-2 rounded-xl border border-accent/50 bg-accent/10 p-3 text-xs font-bold text-accent">Exclusive Top Wear: Maximum 3 pieces per order</p>
+            ) : printType === "No Print" ? (
               <p className="mt-1 text-xs text-muted-foreground">Player details are not needed for plain (no print) jerseys.</p>
             ) : null}
           </div>
