@@ -13,6 +13,8 @@ export const Route = createFileRoute("/profile/address")({
       { name: "description", content: "Manage your saved delivery addresses for Jersey Fit orders." },
       { property: "og:title", content: "My Addresses — Jersey Fit" },
       { property: "og:description", content: "Add, edit and set a default delivery address." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { name: "robots", content: "noindex" },
     ],
   }),

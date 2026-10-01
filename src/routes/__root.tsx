@@ -30,7 +30,7 @@ function NotFoundComponent() {
           <Link to="/" className="inline-flex h-11 items-center rounded-full bg-heat px-6 text-sm font-extrabold uppercase text-primary-foreground">
             Go home
           </Link>
-          <Link to="/shop" className="inline-flex h-11 items-center rounded-full border border-border px-6 text-sm font-extrabold uppercase">
+          <Link to="/shop" search={{ category: "all" }} className="inline-flex h-11 items-center rounded-full border border-border px-6 text-sm font-extrabold uppercase">
             Shop jerseys
           </Link>
         </div>

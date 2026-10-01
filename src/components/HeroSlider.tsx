@@ -82,7 +82,7 @@ export function HeroSlider() {
           </h1>
           <p className="mt-4 max-w-xl text-sm text-muted-foreground sm:text-lg">{slide.text}</p>
           <div className="mt-7 flex flex-wrap gap-3">
-            <Link to="/shop"><Button size="lg">Shop Now</Button></Link>
+            <Link to="/shop" search={{ category: "all" }}><Button size="lg">Shop Now</Button></Link>
             <Link to="/contact"><Button size="lg" variant="outline">Get a bulk quote</Button></Link>
           </div>
         </motion.div>

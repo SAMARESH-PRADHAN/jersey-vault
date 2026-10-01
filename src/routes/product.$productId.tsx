@@ -27,6 +27,7 @@ export const Route = createFileRoute("/product/$productId")({
         { property: "og:title", content: `${p.name} — Jersey Fit` },
         { property: "og:description", content: p.description },
         { property: "og:type", content: "product" },
+        { name: "twitter:card", content: "summary_large_image" },
       ],
     };
   },
@@ -161,7 +162,7 @@ function ProductDetail() {
   return (
     <div className="shell py-10">
       <nav className="mb-6 text-xs font-bold uppercase tracking-wider text-muted-foreground">
-        <Link to="/" className="hover:text-foreground">Home</Link> / <Link to="/shop" className="hover:text-foreground">Shop</Link> / <span className="text-lime">{product.code}</span>
+        <Link to="/" className="hover:text-foreground">Home</Link> / <Link to="/shop" search={{ category: "all" }} className="hover:text-foreground">Shop</Link> / <span className="text-lime">{product.code}</span>
       </nav>
 
       <div className="grid gap-8 lg:grid-cols-2">

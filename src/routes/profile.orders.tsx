@@ -68,7 +68,7 @@ function Orders() {
           <Package className="mx-auto h-10 w-10 text-accent" />
           <h1 className="mt-4 text-2xl">No orders yet</h1>
           <p className="mt-2 text-sm text-muted-foreground">Your custom kits will show up here with live tracking.</p>
-          <Link to="/shop"><Button size="lg" className="mt-6">Shop jerseys</Button></Link>
+          <Link to="/shop" search={{ category: "all" }}><Button size="lg" className="mt-6">Shop jerseys</Button></Link>
         </Card>
       </div>
     );
