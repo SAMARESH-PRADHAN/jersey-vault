@@ -6,6 +6,7 @@ import { ProductCard } from "@/components/ProductCard";
 import { PRODUCTS, SHOP_CATEGORIES, getCategory } from "@/data/products";
 import type { CategorySlug } from "@/types";
 import { inr } from "@/lib/storage";
+import hero from "@/assets/hero-1.jpg";
 
 type Sort = "featured" | "low" | "high" | "rating";
 
@@ -65,7 +66,7 @@ function Shop() {
   const currentCategory = getCategory(category);
   const banner = currentCategory ?? {
     label: "All Jersey Collections",
-    image: SHOP_CATEGORIES[0].image,
+    image: hero,
     description: "Custom sports, community and ready-to-wear jerseys in one place.",
   };
 

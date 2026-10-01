@@ -16,6 +16,8 @@ export const Route = createFileRoute("/checkout")({
       { name: "description", content: "Confirm your address, choose a payment method and place your custom jersey order." },
       { property: "og:title", content: "Checkout — Jersey Fit" },
       { property: "og:description", content: "Secure demo checkout for custom jersey orders." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { name: "robots", content: "noindex" },
     ],
   }),

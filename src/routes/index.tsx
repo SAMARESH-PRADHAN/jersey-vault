@@ -127,7 +127,7 @@ function Home() {
               stay consistent whether you order 10 pieces or 10,000.
             </p>
             <div className="mt-7 flex gap-3">
-              <Link to="/shop"><Button>Browse jerseys</Button></Link>
+              <Link to="/shop" search={{ category: "all" }}><Button>Browse jerseys</Button></Link>
               <Link to="/contact"><Button variant="outline">Talk to us</Button></Link>
             </div>
           </div>
@@ -171,7 +171,7 @@ function Home() {
           {featured.map((p) => <ProductCard key={p.id} product={p} />)}
         </div>
         <div className="mt-10 text-center">
-          <Link to="/shop"><Button size="lg" variant="lime">View all jerseys</Button></Link>
+          <Link to="/shop" search={{ category: "all" }}><Button size="lg" variant="lime">View all jerseys</Button></Link>
         </div>
       </section>
 

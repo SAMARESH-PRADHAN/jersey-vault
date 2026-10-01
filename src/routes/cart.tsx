@@ -38,7 +38,7 @@ function CartPage() {
           <ShoppingBag className="mx-auto h-10 w-10 text-lime" />
           <h1 className="mt-4 text-2xl">Your cart is empty</h1>
           <p className="mt-2 text-sm text-muted-foreground">Add a jersey and customise it with names, numbers and your logo.</p>
-          <Link to="/shop"><Button size="lg" className="mt-6">Start shopping</Button></Link>
+          <Link to="/shop" search={{ category: "all" }}><Button size="lg" className="mt-6">Start shopping</Button></Link>
         </Card>
       </div>
     );
@@ -140,7 +140,7 @@ function CartPage() {
           <Button size="lg" className="mt-6 w-full" onClick={placeOrder}>
             {user ? "Place Order" : "Login to place order"}
           </Button>
-          <Link to="/shop" className="mt-3 block text-center text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground">
+          <Link to="/shop" search={{ category: "all" }} className="mt-3 block text-center text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground">
             Continue shopping
           </Link>
         </Card>
