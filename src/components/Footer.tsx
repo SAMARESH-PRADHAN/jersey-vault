@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { Facebook, Instagram, Mail, MapPin, Phone, Youtube } from "lucide-react";
-import { CATEGORIES } from "@/data/products";
+import { CATEGORIES, TOP_WEAR_CATEGORY } from "@/data/products";
 
 export function Footer() {
   return (
@@ -29,15 +29,17 @@ export function Footer() {
                 <Link to="/shop" search={{ category: c.slug }} className="hover:text-foreground">{c.label}</Link>
               </li>
             ))}
+            <li><Link to="/shop" search={{ category: TOP_WEAR_CATEGORY.slug }} className="hover:text-foreground">{TOP_WEAR_CATEGORY.label}</Link></li>
           </ul>
         </nav>
 
         <nav aria-label="Company links">
           <h3 className="text-sm tracking-widest">Company</h3>
           <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
-            <li><Link to="/" hash="about" className="hover:text-foreground">About Us</Link></li>
+            <li><Link to="/about" className="hover:text-foreground">About Us</Link></li>
             <li><Link to="/" hash="services" className="hover:text-foreground">Services</Link></li>
             <li><Link to="/" hash="factory" className="hover:text-foreground">Our Factory</Link></li>
+            <li><Link to="/customers" className="hover:text-foreground">Our Customers</Link></li>
             <li><Link to="/contact" className="hover:text-foreground">Contact</Link></li>
           </ul>
         </nav>

@@ -1,39 +1,45 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { SlidersHorizontal } from "lucide-react";
-import { Button, Card, ProductSkeleton, SectionTitle } from "@/components/ui/kit";
+import { Check, SlidersHorizontal } from "lucide-react";
+import { Button, Card, ProductSkeleton } from "@/components/ui/kit";
 import { ProductCard } from "@/components/ProductCard";
-import { CATEGORIES, PRODUCTS } from "@/data/products";
+import { PRODUCTS, SHOP_CATEGORIES, getCategory } from "@/data/products";
 import type { CategorySlug } from "@/types";
 import { inr } from "@/lib/storage";
 
 type Sort = "featured" | "low" | "high" | "rating";
 
 export const Route = createFileRoute("/shop")({
-  validateSearch: (search: Record<string, unknown>): { category?: CategorySlug | "all" } => ({
-    category: (typeof search["category"] === "string" ? search["category"] : "all") as CategorySlug | "all",
-  }),
+  validateSearch: (search: Record<string, unknown>) => {
+    const requested = typeof search["category"] === "string" ? search["category"] : "all";
+    const category = SHOP_CATEGORIES.some((item) => item.slug === requested) ? requested : "all";
+    return { category: category as CategorySlug | "all" };
+  },
   head: () => ({
     meta: [
       { title: "Shop Custom Jerseys — All Over, Front & Back Print | Jersey Fit" },
       { name: "description", content: "Browse all over print, front print and back print sports jerseys. Filter by price, sort and customise with names, numbers and logos." },
       { property: "og:title", content: "Shop Custom Jerseys — Jersey Fit" },
       { property: "og:description", content: "All over print, front print and back print jerseys with live customisation." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: Shop,
 });
 
 const PAGE = 8;
-const MAXP = 1200;
+const MAXP = 2000;
+const MATERIALS = Array.from(new Set(PRODUCTS.map((product) => product.material))).sort();
 
 function Shop() {
   const category = Route.useSearch().category ?? "all";
-  const navigate = useNavigate();
+  const navigate = Route.useNavigate();
   const [range, setRange] = useState<[number, number]>([0, MAXP]);
   const [sort, setSort] = useState<Sort>("featured");
   const [visible, setVisible] = useState(PAGE);
   const [loading, setLoading] = useState(true);
+  const [materials, setMaterials] = useState<string[]>([]);
 
   // Simulated fetch — swap for GET /api/products?category=…
   useEffect(() => {
@@ -41,41 +47,65 @@ function Shop() {
     setVisible(PAGE);
     const t = setTimeout(() => setLoading(false), 500);
     return () => clearTimeout(t);
-  }, [category, sort, range[0], range[1]]);
+  }, [category, sort, range[0], range[1], materials]);
 
   const list = useMemo(() => {
     let l = PRODUCTS.filter((p) => (category === "all" ? true : p.category === category));
     l = l.filter((p) => p.price >= range[0] && p.price <= range[1]);
+    if (materials.length) l = l.filter((p) => materials.includes(p.material));
     if (sort === "low") l = [...l].sort((a, b) => a.price - b.price);
     if (sort === "high") l = [...l].sort((a, b) => b.price - a.price);
     if (sort === "rating") l = [...l].sort((a, b) => b.rating - a.rating);
     return l;
-  }, [category, range, sort]);
+  }, [category, materials, range, sort]);
 
   const setCategory = (c: CategorySlug | "all") =>
-    navigate({ to: "/shop", search: { category: c } });
+    navigate({ to: ".", search: { category: c } });
+
+  const currentCategory = getCategory(category);
+  const banner = currentCategory ?? {
+    label: "All Jersey Collections",
+    image: SHOP_CATEGORIES[0].image,
+    description: "Custom sports, community and ready-to-wear jerseys in one place.",
+  };
+
+  const toggleMaterial = (material: string) =>
+    setMaterials((selected) => selected.includes(material) ? selected.filter((item) => item !== material) : [...selected, material]);
+
+  const resetFilters = () => {
+    setRange([0, MAXP]);
+    setSort("featured");
+    setMaterials([]);
+    setCategory("all");
+  };
 
   return (
-    <div className="shell py-12">
-      <SectionTitle kicker="Shop" title="Build your squad kit" sub="Pick a print style, then customise sizes, names and numbers." />
+    <div>
+      <section className="relative min-h-[330px] overflow-hidden border-b border-border">
+        <img key={banner.image} src={banner.image} alt={`${banner.label} collection`} width={1600} height={900} className="absolute inset-0 h-full w-full object-cover" />
+        <div className="absolute inset-0 bg-background/70" />
+        <div className="shell relative flex min-h-[330px] items-end py-12">
+          <div className="max-w-3xl"><span className="text-xs font-extrabold uppercase tracking-[0.25em] text-lime">Shop Collection</span><h1 className="mt-3 text-4xl sm:text-6xl">{banner.label}</h1><p className="mt-4 max-w-xl text-sm text-foreground/80 sm:text-base">{banner.description}</p></div>
+        </div>
+      </section>
 
-      {/* category pills */}
-      <div className="mb-6 flex flex-wrap justify-center gap-2">
-        {[{ slug: "all" as const, label: "All Jerseys" }, ...CATEGORIES].map((c) => (
-          <button key={c.slug} onClick={() => setCategory(c.slug)}
-            aria-pressed={category === c.slug}
-            className={`h-11 rounded-full px-5 text-xs font-extrabold uppercase tracking-wide transition-all sm:text-sm ${
-              category === c.slug ? "bg-heat text-primary-foreground glow" : "border border-border bg-surface/60 text-muted-foreground hover:text-foreground"
-            }`}>
-            {c.label}
-          </button>
-        ))}
-      </div>
+      <div className="shell py-12">
 
       <div className="grid gap-6 lg:grid-cols-[260px_1fr]">
         {/* filters */}
         <Card className="h-fit lg:sticky lg:top-24">
           <h3 className="flex items-center gap-2 text-base"><SlidersHorizontal className="h-4 w-4 text-lime" /> Filters</h3>
+
+          <div className="mt-5">
+            <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Category</p>
+            <div className="mt-3 max-h-72 space-y-1 overflow-y-auto pr-1">
+              {[{ slug: "all" as const, label: "All Jerseys" }, ...SHOP_CATEGORIES].map((item) => (
+                <button key={item.slug} onClick={() => setCategory(item.slug)} aria-pressed={category === item.slug} className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-xs font-bold ${category === item.slug ? "bg-primary/15 text-lime" : "text-muted-foreground hover:bg-surface-2 hover:text-foreground"}`}>
+                  {item.label}{category === item.slug ? <Check className="h-3.5 w-3.5" /> : null}
+                </button>
+              ))}
+            </div>
+          </div>
 
           <div className="mt-5">
             <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Price range</p>
@@ -94,6 +124,18 @@ function Shop() {
             <p className="mt-2 text-xs text-muted-foreground">{inr(range[0])} — {inr(range[1])}</p>
           </div>
 
+          <fieldset className="mt-6">
+            <legend className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Material</legend>
+            <div className="mt-3 max-h-64 space-y-2 overflow-y-auto pr-1">
+              {MATERIALS.map((material) => (
+                <label key={material} className="flex cursor-pointer items-start gap-2 text-xs text-muted-foreground hover:text-foreground">
+                  <input type="checkbox" checked={materials.includes(material)} onChange={() => toggleMaterial(material)} className="mt-0.5 accent-[var(--color-lime)]" />
+                  <span>{material}</span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+
           <div className="mt-6">
             <label htmlFor="sort" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Sort by</label>
             <select id="sort" value={sort} onChange={(e) => setSort(e.target.value as Sort)}
@@ -105,7 +147,7 @@ function Shop() {
             </select>
           </div>
 
-          <Button variant="outline" className="mt-6 w-full" onClick={() => { setRange([0, MAXP]); setSort("featured"); setCategory("all"); }}>
+          <Button variant="outline" className="mt-6 w-full" onClick={resetFilters}>
             Reset filters
           </Button>
         </Card>
@@ -120,7 +162,7 @@ function Shop() {
             <Card className="py-16 text-center">
               <h3 className="text-xl">No jerseys match those filters</h3>
               <p className="mt-2 text-sm text-muted-foreground">Try widening the price range or switching category.</p>
-              <Button className="mt-5" onClick={() => { setRange([0, MAXP]); setCategory("all"); }}>Clear filters</Button>
+              <Button className="mt-5" onClick={resetFilters}>Clear filters</Button>
             </Card>
           ) : (
             <>
@@ -138,6 +180,7 @@ function Shop() {
             </>
           )}
         </div>
+      </div>
       </div>
     </div>
   );

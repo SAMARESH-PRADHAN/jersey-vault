@@ -13,6 +13,8 @@ export const Route = createFileRoute("/cart")({
       { name: "description", content: "Review your custom jersey order, apply a coupon and see GST before checkout." },
       { property: "og:title", content: "Your Cart — Jersey Fit" },
       { property: "og:description", content: "Custom jersey cart with coupons and GST breakdown." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { name: "robots", content: "noindex" },
     ],
   }),

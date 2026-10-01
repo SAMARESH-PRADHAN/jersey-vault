@@ -16,6 +16,8 @@ export const Route = createFileRoute("/profile/orders")({
       { name: "description", content: "Track your Jersey Fit orders, download GST invoices and review delivered jerseys." },
       { property: "og:title", content: "My Orders — Jersey Fit" },
       { property: "og:description", content: "Order tracking, invoices and reviews." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { name: "robots", content: "noindex" },
     ],
   }),
