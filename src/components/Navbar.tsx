@@ -46,17 +46,17 @@ export function Navbar() {
         </Link>
 
         {/* desktop nav */}
-        <nav className="hidden items-center gap-7 lg:flex">
+        <nav className="hidden items-center gap-5 lg:flex">
           <Link to="/" className={navLink}>Home</Link>
           <div className="relative">
             <button className={cn(navLink, "flex items-center gap-1")} onClick={() => setCatOpen((v) => !v)} aria-expanded={catOpen}>
-              Browse Category <ChevronDown className="h-4 w-4" />
+              Custom Team Jersey <ChevronDown className="h-4 w-4" />
             </button>
             <AnimatePresence>
               {catOpen ? (
                 <motion.div
                   initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 6 }}
-                  className="panel absolute left-0 top-9 w-64 overflow-hidden p-2"
+                  className="panel absolute left-0 top-9 grid w-[34rem] grid-cols-2 gap-1 overflow-hidden p-3"
                 >
                   {CATEGORIES.map((c) => (
                     <Link key={c.slug} to="/shop" search={{ category: c.slug }}
@@ -68,6 +68,9 @@ export function Navbar() {
               ) : null}
             </AnimatePresence>
           </div>
+          <Link to="/shop" search={{ category: "top-wear" }} className={navLink}>Jersey Fit Top Wear</Link>
+          <Link to="/about" className={navLink}>About Us</Link>
+          <Link to="/customers" className={navLink}>Our Customers</Link>
           <Link to="/contact" className={navLink}>Contact</Link>
         </nav>
 
@@ -146,7 +149,7 @@ export function Navbar() {
                 <Link to="/" className="block rounded-xl px-3 py-3 font-bold uppercase hover:bg-surface-2">Home</Link>
                 <button onClick={() => setAccordion((v) => !v)} aria-expanded={accordion}
                   className="flex w-full items-center justify-between rounded-xl px-3 py-3 font-bold uppercase hover:bg-surface-2">
-                  Browse Category
+                  Custom Team Jersey
                   <ChevronDown className={cn("h-4 w-4 transition-transform", accordion && "rotate-180")} />
                 </button>
                 <AnimatePresence initial={false}>
@@ -161,6 +164,9 @@ export function Navbar() {
                     </motion.div>
                   ) : null}
                 </AnimatePresence>
+                <Link to="/shop" search={{ category: "top-wear" }} className="block rounded-xl px-3 py-3 font-bold uppercase hover:bg-surface-2">Jersey Fit Top Wear</Link>
+                <Link to="/about" className="block rounded-xl px-3 py-3 font-bold uppercase hover:bg-surface-2">About Us</Link>
+                <Link to="/customers" className="block rounded-xl px-3 py-3 font-bold uppercase hover:bg-surface-2">Our Customers</Link>
                 <Link to="/contact" className="block rounded-xl px-3 py-3 font-bold uppercase hover:bg-surface-2">Contact</Link>
               </nav>
 

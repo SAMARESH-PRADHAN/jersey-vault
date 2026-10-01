@@ -21,6 +21,11 @@ export function ProductCard({ product }: { product: Product }) {
               {product.tag}
             </span>
           ) : null}
+          {product.isExclusiveTopWear ? (
+            <span className="absolute bottom-3 left-3 rounded-full bg-accent px-3 py-1 text-[10px] font-black uppercase tracking-wider text-accent-foreground">
+              Exclusive Ready-to-Wear
+            </span>
+          ) : null}
           <span className="absolute right-3 top-3 rounded-full bg-background/80 px-2.5 py-1 text-[10px] font-black text-lime">
             {off}% OFF
           </span>
