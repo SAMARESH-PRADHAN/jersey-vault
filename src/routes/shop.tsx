@@ -3,18 +3,21 @@ import { useEffect, useMemo, useState } from "react";
 import { Check, SlidersHorizontal } from "lucide-react";
 import { Button, Card, ProductSkeleton } from "@/components/ui/kit";
 import { ProductCard } from "@/components/ProductCard";
-import { PRODUCTS, SHOP_CATEGORIES, getCategory } from "@/data/products";
-import type { CategorySlug } from "@/types";
+import { PRODUCTS, SHOP_CATEGORIES, TOP_WEAR_SUBCATEGORIES, getCategory } from "@/data/products";
+import { MobileFilterSheet, type ShopFilters } from "@/components/MobileFilterSheet";
+import type { CategorySlug, TopWearSubCategory } from "@/types";
 import { inr } from "@/lib/storage";
 import hero from "@/assets/hero-1.jpg";
 
 type Sort = "featured" | "low" | "high" | "rating";
 
 export const Route = createFileRoute("/shop")({
-  validateSearch: (search: Record<string, unknown>) => {
+  validateSearch: (search: Record<string, unknown>): { category: CategorySlug | "all"; subCategory?: TopWearSubCategory | undefined } => {
     const requested = typeof search["category"] === "string" ? search["category"] : "all";
     const category = SHOP_CATEGORIES.some((item) => item.slug === requested) ? requested : "all";
-    return { category: category as CategorySlug | "all" };
+    const requestedSub = typeof search["subCategory"] === "string" ? search["subCategory"] : "all";
+    const subCategory: TopWearSubCategory = category === "top-wear" && (requestedSub === "round-neck" || requestedSub === "polo-neck") ? requestedSub : "all";
+    return { category: category as CategorySlug | "all", subCategory: subCategory === "all" ? undefined : subCategory };
   },
   head: () => ({
     meta: [
@@ -35,7 +38,9 @@ const MATERIALS = Array.from(new Set(PRODUCTS.map((product) => product.material)
 
 function Shop() {
   const category = Route.useSearch().category ?? "all";
+  const subCategory = Route.useSearch().subCategory ?? "all";
   const navigate = Route.useNavigate();
+  const [filterOpen, setFilterOpen] = useState(false);
   const [range, setRange] = useState<[number, number]>([0, MAXP]);
   const [sort, setSort] = useState<Sort>("featured");
   const [visible, setVisible] = useState(PAGE);
@@ -48,17 +53,18 @@ function Shop() {
     setVisible(PAGE);
     const t = setTimeout(() => setLoading(false), 500);
     return () => clearTimeout(t);
-  }, [category, sort, range[0], range[1], materials]);
+  }, [category, subCategory, sort, range[0], range[1], materials]);
 
   const list = useMemo(() => {
     let l = PRODUCTS.filter((p) => (category === "all" ? true : p.category === category));
+    if (category === "top-wear" && subCategory !== "all") l = l.filter((p) => p.subCategory === subCategory);
     l = l.filter((p) => p.price >= range[0] && p.price <= range[1]);
     if (materials.length) l = l.filter((p) => materials.includes(p.material));
     if (sort === "low") l = [...l].sort((a, b) => a.price - b.price);
     if (sort === "high") l = [...l].sort((a, b) => b.price - a.price);
     if (sort === "rating") l = [...l].sort((a, b) => b.rating - a.rating);
     return l;
-  }, [category, materials, range, sort]);
+  }, [category, subCategory, materials, range, sort]);
 
   const setCategory = (c: CategorySlug | "all") =>
     navigate({ to: ".", search: { category: c } });
@@ -80,20 +86,42 @@ function Shop() {
     setCategory("all");
   };
 
+  const filters: ShopFilters = { category, subCategory, range, sort, materials };
+  const activeCount = (category !== "all" ? 1 : 0) + (subCategory !== "all" ? 1 : 0) + (range[0] !== 0 || range[1] !== MAXP ? 1 : 0) + materials.length + (sort !== "featured" ? 1 : 0);
+  const applyFilters = (next: ShopFilters) => {
+    setRange(next.range); setSort(next.sort); setMaterials(next.materials);
+    navigate({ to: ".", search: { category: next.category, subCategory: next.category === "top-wear" && next.subCategory !== "all" ? next.subCategory : undefined } });
+    setFilterOpen(false);
+  };
+
   return (
     <div>
-      <section className="relative min-h-[330px] overflow-hidden border-b border-border">
+      <section className="relative min-h-[230px] lg:min-h-[330px] overflow-hidden border-b border-border">
         <img key={banner.image} src={banner.image} alt={`${banner.label} collection`} width={1600} height={900} className="absolute inset-0 h-full w-full object-cover" />
         <div className="absolute inset-0 bg-background/70" />
-        <div className="shell relative flex min-h-[330px] items-end py-12">
+        <div className="shell relative flex min-h-[230px] items-end py-8 lg:min-h-[330px] lg:py-12">
           <div className="max-w-3xl"><span className="text-xs font-extrabold uppercase tracking-[0.25em] text-lime">Shop Collection</span><h1 className="mt-3 text-4xl sm:text-6xl">{banner.label}</h1><p className="mt-4 max-w-xl text-sm text-foreground/80 sm:text-base">{banner.description}</p></div>
         </div>
       </section>
 
-      <div className="shell py-12">
+      {category === "top-wear" ? <div className="shell flex flex-wrap gap-2 py-4">
+        {TOP_WEAR_SUBCATEGORIES.map((sub) => <Button key={sub.slug} variant={subCategory === sub.slug ? "lime" : "outline"} aria-pressed={subCategory === sub.slug} className="px-3 text-xs"
+          onClick={() => navigate({ to: ".", search: { category: "top-wear", subCategory: sub.slug === "all" ? undefined : sub.slug } })}>{sub.label}</Button>)}
+      </div> : null}
+      <div className="sticky top-16 z-30 border-b border-border bg-background/95 backdrop-blur-xl md:top-18 lg:hidden">
+        <div className="shell grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 py-3">
+          <p className="min-w-0 text-xs font-bold text-muted-foreground" aria-live="polite">Showing {list.length} Jerseys</p>
+          <Button variant="lime" className="gap-2 px-4 text-xs" onClick={() => setFilterOpen(true)}><SlidersHorizontal className="h-4 w-4 shrink-0" />Filter & Sort
+            {activeCount ? <span className="grid h-5 min-w-5 place-items-center rounded-full bg-background text-foreground" aria-label={`${activeCount} active filters`}>{activeCount}</span> : null}
+          </Button>
+        </div>
+      </div>
+      {filterOpen ? <MobileFilterSheet initial={filters} onClose={() => setFilterOpen(false)} onApply={applyFilters} /> : null}
+      <div className="shell py-6 lg:py-12">
 
       <div className="grid gap-6 lg:grid-cols-[260px_1fr]">
         {/* filters */}
+        <div className="hidden lg:block">
         <Card className="h-fit lg:sticky lg:top-24">
           <h3 className="flex items-center gap-2 text-base"><SlidersHorizontal className="h-4 w-4 text-lime" /> Filters</h3>
 
@@ -152,9 +180,10 @@ function Shop() {
             Reset filters
           </Button>
         </Card>
+        </div>
 
         {/* grid */}
-        <div>
+        <div className="min-w-0">
           {loading ? (
             <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
               {Array.from({ length: 6 }).map((_, i) => <ProductSkeleton key={i} />)}
@@ -167,7 +196,7 @@ function Shop() {
             </Card>
           ) : (
             <>
-              <p className="mb-4 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              <p className="mb-4 hidden text-xs font-bold uppercase tracking-wider text-muted-foreground lg:block">
                 {list.length} jersey{list.length > 1 ? "s" : ""} found
               </p>
               <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">

@@ -66,7 +66,7 @@ function Contact() {
           </form>
         </Card>
 
-        <div className="space-y-4">
+        <div className="flex flex-col gap-4 lg:block lg:space-y-4">
           <Card className="space-y-4">
             {[
               { Icon: Phone, label: "Call / WhatsApp", value: "+91 98765 43210" },
@@ -85,9 +85,9 @@ function Contact() {
               </div>
             ))}
           </Card>
-          <a href="https://wa.me/919876543210?text=Hi%20Jersey%20Fit%20Team%2C%20I%20would%20like%20to%20request%20a%20quote%20for%20team%20jerseys." target="_blank" rel="noreferrer" className="panel flex items-center gap-4 p-5 transition-transform hover:-translate-y-1" aria-label="Request a team jersey quote through WhatsApp">
+          <a href="https://wa.me/919876543210?text=Hi%20Jersey%20Fit%20Team%2C%20I%20would%20like%20to%20request%20a%20quote%20for%20team%20jerseys." target="_blank" rel="noreferrer" className="panel order-first flex min-h-20 items-center gap-4 border-lime/50 bg-lime/10 p-5 lg:order-none lg:border-border lg:bg-transparent transition-transform hover:-translate-y-1" aria-label="Request a team jersey quote through WhatsApp">
             <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-lime"><MessageCircle className="h-6 w-6 text-lime-foreground" /></span>
-            <span><strong className="block text-sm uppercase">Request a quote through WhatsApp</strong><span className="mt-1 block text-xs text-muted-foreground">Start a chat with the Jersey Fit team.</span></span>
+            <span className="min-w-0"><strong className="block text-sm uppercase">Request a quote through WhatsApp</strong><span className="mt-1 block text-xs text-muted-foreground">Start a chat with the Jersey Fit team.</span></span>
           </a>
           <div className="panel grid h-56 place-items-center bg-surface-2 text-center text-sm text-muted-foreground">
             <div>

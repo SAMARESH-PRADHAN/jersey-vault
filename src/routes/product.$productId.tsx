@@ -123,7 +123,10 @@ function ProductDetail() {
       if (missing) errs.push("Fill in the name and number for every unit.");
     }
     setErrors(errs);
-    if (errs.length) return;
+    if (errs.length) {
+      toast.error(errs[0] ?? "Please check your selection.");
+      return;
+    }
 
     if (!user) {
       openAuth(`/product/${product.id}`);
@@ -143,12 +146,12 @@ function ProductDetail() {
       productId: product.id,
       name: product.name,
       code: product.code,
-      image: product.images[0]!,
+      image: product.images[0] ?? "",
       unitPrice: product.price + perUnitPrint,
       printType: isTopWear ? "No Print" : printType,
       printCategories: isTopWear ? [] : cats,
       ...(!isTopWear && logo ? { logo } : {}),
-      sizes: SIZES.filter((s) => (qty[s] ?? 0) > 0).map((s) => ({ size: s, qty: qty[s]! })),
+      sizes: SIZES.filter((s) => (qty[s] ?? 0) > 0).map((s) => ({ size: s, qty: qty[s] ?? 0 })),
       rows: personRows,
       note,
       totalQty,
@@ -160,7 +163,7 @@ function ProductDetail() {
   const scrollRail = (d: number) => railRef.current?.scrollBy({ left: d * 280, behavior: "smooth" });
 
   return (
-    <div className="shell py-10">
+    <div className="shell pt-6 pb-28 lg:py-10">
       <nav className="mb-6 text-xs font-bold uppercase tracking-wider text-muted-foreground">
         <Link to="/" className="hover:text-foreground">Home</Link> / <Link to="/shop" search={{ category: "all" }} className="hover:text-foreground">Shop</Link> / <span className="text-lime">{product.code}</span>
       </nav>
@@ -272,12 +275,12 @@ function ProductDetail() {
                       <span className="text-sm font-extrabold">{s}</span>
                       <span className="flex shrink-0 items-center gap-1">
                         <button onClick={() => step(s, -1)} aria-label={`Decrease ${s} quantity`}
-                          className="grid h-8 w-8 place-items-center rounded-full border border-border"><Minus className="h-3 w-3" /></button>
+                          className="grid h-11 w-11 place-items-center sm:h-8 sm:w-8 rounded-full border border-border"><Minus className="h-3 w-3" /></button>
                         <input aria-label={`${s} quantity`} value={n} inputMode="numeric"
                           onChange={(e) => setSizeQuantity(s, Number(e.target.value))}
-                          className="h-8 w-12 rounded-lg border border-input bg-background/60 text-center text-sm" />
+                          className="h-11 w-12 rounded-lg sm:h-8 border border-input bg-background/60 text-center text-sm" />
                         <button onClick={() => step(s, 1)} aria-label={`Increase ${s} quantity`}
-                          className="grid h-8 w-8 place-items-center rounded-full bg-heat text-primary-foreground"><Plus className="h-3 w-3" /></button>
+                          className="grid h-11 w-11 place-items-center sm:h-8 sm:w-8 rounded-full bg-heat text-primary-foreground"><Plus className="h-3 w-3" /></button>
                       </span>
                     </div>
                     {/* player rows for this size — shown directly under its counter */}
@@ -295,13 +298,13 @@ function ProductDetail() {
                                 <input placeholder="Player name" aria-label={`Name for ${s} piece ${i + 1}`} maxLength={14}
                                   value={rows[key]?.name ?? ""}
                                   onChange={(e) => setRows({ ...rows, [key]: { number: rows[key]?.number ?? "", name: e.target.value } })}
-                                  className="h-9 w-full rounded-lg border border-input bg-background/60 px-3 text-sm" />
+                                  className="h-12 w-full rounded-lg text-base sm:h-9 sm:text-sm border border-input bg-background/60 px-3 text-sm" />
                               ) : <span className="text-xs text-muted-foreground">— no name —</span>}
                               {cats.includes("Number") ? (
                                 <input placeholder="No." aria-label={`Number for ${s} piece ${i + 1}`} maxLength={2} inputMode="numeric"
                                   value={rows[key]?.number ?? ""}
                                   onChange={(e) => setRows({ ...rows, [key]: { name: rows[key]?.name ?? "", number: e.target.value.replace(/\D/g, "") } })}
-                                  className="h-9 w-full rounded-lg border border-input bg-background/60 px-2 text-center text-sm" />
+                                  className="h-12 w-full rounded-lg text-base sm:h-9 sm:text-sm border border-input bg-background/60 px-2 text-center text-sm" />
                               ) : <span />}
                             </div>
                           );
@@ -348,6 +351,13 @@ function ProductDetail() {
               <ShoppingCart className="h-4 w-4" /> {user ? "Add to Cart" : "Login & Add to Cart"}
             </Button>
           </Card>
+        </div>
+      </div>
+
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 backdrop-blur-xl lg:hidden">
+        <div className="shell grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+          <div className="min-w-0" aria-live="polite"><p className="text-[10px] font-bold uppercase text-muted-foreground">Total · {totalQty} pieces</p><p className="display truncate text-2xl text-lime">{inr(total)}</p></div>
+          <Button onClick={submit} aria-label="Mobile Add to Cart" className="px-5"><ShoppingCart className="h-4 w-4" />Add to Cart</Button>
         </div>
       </div>
 

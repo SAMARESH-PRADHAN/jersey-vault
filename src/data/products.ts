@@ -1,4 +1,4 @@
-import type { CategorySlug, Product } from "@/types";
+import type { CategorySlug, Product, TopWearSubCategory } from "@/types";
 import j1 from "@/assets/jersey-1.jpg";
 import j2 from "@/assets/jersey-2.jpg";
 import j3 from "@/assets/jersey-3.jpg";
@@ -26,6 +26,12 @@ export const TOP_WEAR_CATEGORY = {
 };
 
 export const SHOP_CATEGORIES = [...CATEGORIES, TOP_WEAR_CATEGORY];
+
+export const TOP_WEAR_SUBCATEGORIES: { slug: TopWearSubCategory; label: string }[] = [
+  { slug: "all", label: "All Top Wear" },
+  { slug: "round-neck", label: "Round Neck T-Shirts" },
+  { slug: "polo-neck", label: "Polo Neck T-Shirts" },
+];
 
 export const getCategory = (slug: CategorySlug | "all") =>
   slug === "all" ? undefined : SHOP_CATEGORIES.find((category) => category.slug === slug);
@@ -331,6 +337,7 @@ export const PRODUCTS: Product[] = [
     code: "JF-TW-1201",
     name: "Jersey Fit Signature Training Tee",
     category: "top-wear",
+    subCategory: "round-neck",
     price: 1099,
     mrp: 1699,
     material: "190 GSM Premium Performance Interlock",
@@ -345,6 +352,7 @@ export const PRODUCTS: Product[] = [
     code: "JF-TW-1202",
     name: "Jersey Fit Clubhouse Performance Top",
     category: "top-wear",
+    subCategory: "polo-neck",
     price: 1299,
     mrp: 1999,
     material: "200 GSM Luxe Stretch Knit",
@@ -353,6 +361,20 @@ export const PRODUCTS: Product[] = [
     rating: 4.9,
     tag: "Limited Drop",
     isExclusiveTopWear: true,
+  },
+  {
+    id: "p25", code: "JF-TW-1203", name: "Aero-Lite Round Neck Training Tee",
+    category: "top-wear", subCategory: "round-neck", isExclusiveTopWear: true,
+    price: 999, mrp: 1499, material: "180 GSM Bio-Washed Cotton Spandex",
+    description: "A soft, breathable round neck training tee with flexible stretch and an easy athletic fit.",
+    images: gallery(j1), rating: 4.7, tag: "New",
+  },
+  {
+    id: "p26", code: "JF-TW-1204", name: "Pro Club Classic Pique Polo",
+    category: "top-wear", subCategory: "polo-neck", isExclusiveTopWear: true,
+    price: 1399, mrp: 1999, material: "210 GSM Honeycomb Cotton Poly",
+    description: "A classic pique polo with a structured collar and breathable honeycomb texture for everyday club style.",
+    images: gallery(j3), rating: 4.8, tag: "Premium",
   },
 ];
 
