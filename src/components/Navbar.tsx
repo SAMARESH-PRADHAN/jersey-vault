@@ -184,7 +184,7 @@ export function Navbar() {
                       ))}
                     </motion.div>
                   ) : null}
-                </AnimatePresence>, document.body) : null}
+                </AnimatePresence>
                 <Button variant="ghost" onClick={() => setTopWearAccordion((v) => !v)} aria-expanded={topWearAccordion} className="h-auto min-h-12 w-full justify-between rounded-xl px-3 py-3 text-left font-bold uppercase text-foreground">
                   <span className="min-w-0">Jersey Fit Top Wear</span><ChevronDown className={cn("h-4 w-4 shrink-0", topWearAccordion && "rotate-180")} />
                 </Button>
@@ -208,7 +208,7 @@ export function Navbar() {
             </motion.aside>
           </motion.div>
         ) : null}
-      </AnimatePresence>
+      </AnimatePresence>, document.body) : null}
     </header>
   );
 }
