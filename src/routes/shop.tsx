@@ -12,7 +12,7 @@ import hero from "@/assets/hero-1.jpg";
 type Sort = "featured" | "low" | "high" | "rating";
 
 export const Route = createFileRoute("/shop")({
-  validateSearch: (search: Record<string, unknown>) => {
+  validateSearch: (search: Record<string, unknown>): { category: CategorySlug | "all"; subCategory?: TopWearSubCategory } => {
     const requested = typeof search["category"] === "string" ? search["category"] : "all";
     const category = SHOP_CATEGORIES.some((item) => item.slug === requested) ? requested : "all";
     const requestedSub = typeof search["subCategory"] === "string" ? search["subCategory"] : "all";
