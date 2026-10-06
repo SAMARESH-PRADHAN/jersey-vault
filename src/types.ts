@@ -12,6 +12,8 @@ export type CategorySlug =
   | "marathon"
   | "top-wear";
 
+export type TopWearSubCategory = "all" | "round-neck" | "polo-neck";
+
 export interface Product {
   id: string;
   code: string;
@@ -25,6 +27,7 @@ export interface Product {
   rating: number;
   tag?: string;
   isExclusiveTopWear?: boolean;
+  subCategory?: "round-neck" | "polo-neck";
 }
 
 export type PrintType = "Sublimation Print" | "DTF Print" | "No Print";
