@@ -54,7 +54,7 @@ function CustomersPage() {
                 <Link
                   to="/product/$productId"
                   params={{ productId: customer.productId }}
-                  className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-full bg-heat px-5 py-3 text-xs font-black uppercase tracking-wider text-primary-foreground transition hover:glow sm:w-auto"
+                  className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-full bg-heat px-5 py-3.5 text-xs font-black uppercase tracking-wider text-primary-foreground transition hover:glow sm:w-auto sm:py-3"
                   aria-label={`View ${customer.name} jersey details`}
                 >
                   View Jersey Details <ArrowRight className="h-4 w-4" />
