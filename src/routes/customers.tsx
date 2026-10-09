@@ -43,7 +43,7 @@ function CustomersPage() {
       </section>
       <section className="shell py-20">
         <SectionTitle kicker="Team Gallery" title="Worn with pride" sub="Real team types represented with our existing demo imagery." />
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid items-start gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {customers.map((customer, index) => (
             <article key={customer.name} className={`panel group flex flex-col overflow-hidden p-0 ${index === 0 || index === 5 ? "lg:col-span-2" : ""}`}>
               <Link to="/product/$productId" params={{ productId: customer.productId }} className="relative block aspect-4/3 overflow-hidden" aria-label={`View ${customer.name} jersey details`}>
