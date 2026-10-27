@@ -15,6 +15,7 @@ import { Route as CartRouteImport } from './routes/cart'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CustomersRouteImport } from './routes/customers'
+import { Route as PremiumCollectionRouteImport } from './routes/premium-collection'
 import { Route as ShopRouteImport } from './routes/shop'
 import { Route as ProductProductIdRouteImport } from './routes/product.$productId'
 import { Route as ProfileAddressRouteImport } from './routes/profile.address'
@@ -50,6 +51,11 @@ const CustomersRoute = CustomersRouteImport.update({
   path: '/customers',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PremiumCollectionRoute = PremiumCollectionRouteImport.update({
+  id: '/premium-collection',
+  path: '/premium-collection',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ShopRoute = ShopRouteImport.update({
   id: '/shop',
   path: '/shop',
@@ -78,6 +84,7 @@ export interface FileRoutesByFullPath {
   '/checkout': typeof CheckoutRoute
   '/contact': typeof ContactRoute
   '/customers': typeof CustomersRoute
+  '/premium-collection': typeof PremiumCollectionRoute
   '/shop': typeof ShopRoute
   '/product/$productId': typeof ProductProductIdRoute
   '/profile/address': typeof ProfileAddressRoute
@@ -90,6 +97,7 @@ export interface FileRoutesByTo {
   '/checkout': typeof CheckoutRoute
   '/contact': typeof ContactRoute
   '/customers': typeof CustomersRoute
+  '/premium-collection': typeof PremiumCollectionRoute
   '/shop': typeof ShopRoute
   '/product/$productId': typeof ProductProductIdRoute
   '/profile/address': typeof ProfileAddressRoute
@@ -103,6 +111,7 @@ export interface FileRoutesById {
   '/checkout': typeof CheckoutRoute
   '/contact': typeof ContactRoute
   '/customers': typeof CustomersRoute
+  '/premium-collection': typeof PremiumCollectionRoute
   '/shop': typeof ShopRoute
   '/product/$productId': typeof ProductProductIdRoute
   '/profile/address': typeof ProfileAddressRoute
@@ -117,6 +126,7 @@ export interface FileRouteTypes {
     | '/checkout'
     | '/contact'
     | '/customers'
+    | '/premium-collection'
     | '/shop'
     | '/product/$productId'
     | '/profile/address'
@@ -129,6 +139,7 @@ export interface FileRouteTypes {
     | '/checkout'
     | '/contact'
     | '/customers'
+    | '/premium-collection'
     | '/shop'
     | '/product/$productId'
     | '/profile/address'
@@ -141,6 +152,7 @@ export interface FileRouteTypes {
     | '/checkout'
     | '/contact'
     | '/customers'
+    | '/premium-collection'
     | '/shop'
     | '/product/$productId'
     | '/profile/address'
@@ -154,6 +166,7 @@ export interface RootRouteChildren {
   CheckoutRoute: typeof CheckoutRoute
   ContactRoute: typeof ContactRoute
   CustomersRoute: typeof CustomersRoute
+  PremiumCollectionRoute: typeof PremiumCollectionRoute
   ShopRoute: typeof ShopRoute
   ProductProductIdRoute: typeof ProductProductIdRoute
   ProfileAddressRoute: typeof ProfileAddressRoute
@@ -204,6 +217,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CustomersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/premium-collection': {
+      id: '/premium-collection'
+      path: '/premium-collection'
+      fullPath: '/premium-collection'
+      preLoaderRoute: typeof PremiumCollectionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/shop': {
       id: '/shop'
       path: '/shop'
@@ -242,6 +262,7 @@ const rootRouteChildren: RootRouteChildren = {
   CheckoutRoute: CheckoutRoute,
   ContactRoute: ContactRoute,
   CustomersRoute: CustomersRoute,
+  PremiumCollectionRoute: PremiumCollectionRoute,
   ShopRoute: ShopRoute,
   ProductProductIdRoute: ProductProductIdRoute,
   ProfileAddressRoute: ProfileAddressRoute,
