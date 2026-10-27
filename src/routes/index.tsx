@@ -66,24 +66,55 @@ function Home() {
     <>
       <HeroSlider />
 
-      {/* CUSTOM TEAM COLLECTIONS */}
+      {/* CUSTOM TEAM JERSEY — premium showcase */}
       <section className="shell py-16 sm:py-20">
         <SectionTitle kicker="Custom Team Jersey" title="Made for every kind of team" sub="Choose your sport, event or print style and start building a kit that belongs to your group." />
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 xl:grid-cols-4">
           {CATEGORIES.map((category, index) => (
-            <motion.div key={category.slug} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: (index % 4) * 0.05 }}>
-              <Link to="/shop" search={{ category: category.slug }} className="group relative block aspect-3/4 sm:aspect-4/3 overflow-hidden rounded-2xl border border-border">
-                <img src={category.image} alt={category.label} loading="lazy" width={1024} height={768} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
-                <div className="absolute inset-0 bg-background/65 transition-colors group-hover:bg-background/50" />
+            <motion.div key={category.slug} initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: (index % 4) * 0.06, duration: 0.45 }}>
+              <Link to="/shop" search={{ category: category.slug }}
+                className="group relative block aspect-4/5 overflow-hidden rounded-2xl border border-border transition-all duration-300 hover:border-lime/60 hover:glow">
+                <img src={category.image} alt={category.label} loading="lazy" width={1024} height={1024}
+                  className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                <div className="absolute inset-0 bg-gradient-to-t from-background/95 via-background/40 to-transparent" />
+                <span className="absolute left-3 top-3 rounded-full border border-border bg-background/50 px-2.5 py-1 text-[9px] font-black uppercase tracking-widest text-foreground backdrop-blur-md sm:text-[10px]">
+                  {index % 2 === 0 ? "Custom Kit" : "Team Squad"}
+                </span>
+                <span className="display absolute right-3 top-2 text-xl text-foreground/25 sm:text-3xl">0{index + 1}</span>
                 <div className="absolute inset-0 flex flex-col justify-end p-3 sm:p-5">
-                  <span className="mb-auto w-fit rounded-full bg-lime px-2 py-1 sm:px-3 text-[10px] font-black uppercase tracking-wider text-lime-foreground">Custom collection</span>
-                  <h3 className="text-lg sm:text-2xl">{category.label}</h3>
-                  <p className="mt-1 hidden line-clamp-2 sm:block text-xs text-foreground/80">{category.description}</p>
-                  <span className="mt-3 text-xs font-black uppercase tracking-wider text-lime">View collection →</span>
+                  <h3 className="text-base leading-tight sm:text-xl">{category.label}</h3>
+                  <p className="mt-1 hidden line-clamp-2 text-xs text-foreground/75 sm:block">{category.description}</p>
+                  <span className="mt-2 inline-flex items-center gap-1.5 text-[11px] font-black uppercase tracking-widest text-lime transition-transform duration-300 group-hover:translate-x-1 sm:mt-3 sm:text-xs">
+                    Explore Squad Kits <span aria-hidden="true">→</span>
+                  </span>
                 </div>
               </Link>
             </motion.div>
           ))}
+        </div>
+      </section>
+
+      {/* TRENDING */}
+      <section className="shell py-16">
+        <SectionTitle kicker="Trending" title="Fresh off the press" />
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          {featured.map((p) => <ProductCard key={p.id} product={p} />)}
+        </div>
+        <div className="mt-10 text-center">
+          <Link to="/shop" search={{ category: "all" }}><Button size="lg" variant="lime">View all jerseys</Button></Link>
+        </div>
+      </section>
+
+      {/* JERSEY FIT TOP WEAR */}
+      <section className="border-y border-border bg-surface/40 py-16">
+        <div className="shell">
+          <SectionTitle kicker="Exclusive Ready-to-Wear" title="Jersey Fit Top Wear" sub="Everyday athletic performance tops and classic polos. Maximum 3 pieces per order." />
+          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+            {topWearProducts.map((p) => <ProductCard key={p.id} product={p} />)}
+          </div>
+          <div className="mt-10 text-center">
+            <Link to="/shop" search={{ category: "top-wear" }}><Button size="lg" variant="lime">View All Jersey Fit Top Wear →</Button></Link>
+          </div>
         </div>
       </section>
 
