@@ -60,6 +60,7 @@ function Counter({ value, suffix }: { value: number; suffix: string }) {
 
 function Home() {
   const featured = PRODUCTS.slice(0, 4);
+  const topWearProducts = PRODUCTS.filter((p) => p.category === "top-wear").slice(-4);
 
   return (
     <>
@@ -164,16 +165,6 @@ function Home() {
         </div>
       </section>
 
-      {/* FEATURED */}
-      <section className="shell py-16">
-        <SectionTitle kicker="Trending" title="Fresh off the press" />
-        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-          {featured.map((p) => <ProductCard key={p.id} product={p} />)}
-        </div>
-        <div className="mt-10 text-center">
-          <Link to="/shop" search={{ category: "all" }}><Button size="lg" variant="lime">View all jerseys</Button></Link>
-        </div>
-      </section>
 
       {/* FACTORY */}
       <section id="factory" className="scroll-mt-24 border-y border-border bg-surface/40 py-20">
