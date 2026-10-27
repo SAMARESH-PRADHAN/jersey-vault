@@ -61,6 +61,7 @@ function Counter({ value, suffix }: { value: number; suffix: string }) {
 function Home() {
   const featured = PRODUCTS.slice(0, 4);
   const topWearProducts = PRODUCTS.filter((p) => p.category === "top-wear").slice(-4);
+  const newArrivals = PRODUCTS.slice(-4);
 
   return (
     <>
@@ -96,7 +97,7 @@ function Home() {
 
       {/* TRENDING */}
       <section className="shell py-16">
-        <SectionTitle kicker="Trending" title="Fresh off the press" />
+        <SectionTitle kicker="Trending Now" title="What squads are wearing" />
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
           {featured.map((p) => <ProductCard key={p.id} product={p} />)}
         </div>
@@ -118,57 +119,89 @@ function Home() {
         </div>
       </section>
 
-      {/* HOW IT WORKS */}
-      <section className="border-y border-border bg-surface/40 py-16">
-        <div className="shell">
-          <SectionTitle kicker="How It Works" title="From idea to match day" sub="A simple four-step path from your first pick to the finished squad kit." />
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-            {[
-              { icon: Icons.Shirt, title: "Pick Jersey & Style", text: "Choose sublimation, DTF or plain." },
-              { icon: Icons.Users, title: "Add Squad Details", text: "Upload your logo, names and numbers per size." },
-              { icon: Icons.BadgeCheck, title: "Proof & Verification", text: "Review every detail before production." },
-              { icon: Icons.Truck, title: "Express Dispatch", text: "Track your finished kits to your doorstep." },
-            ].map(({ icon: Icon, title, text }, index) => (
-              <motion.div key={title} className="relative border-l-2 border-primary px-3 py-3 md:px-5 md:py-4 first:border-lime md:border-l md:border-t-2" initial={{ opacity: 0, x: -16 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: index * 0.08 }}>
-                <div className="flex items-center justify-between gap-4">
-                  <span className="grid h-11 w-11 place-items-center rounded-xl bg-heat"><Icon className="h-5 w-5 text-primary-foreground" /></span>
-                  <span className="display text-2xl text-lime md:text-4xl md:text-muted">0{index + 1}</span>
-                </div>
-                <h3 className="mt-3 text-base md:mt-5 md:text-lg">{title}</h3>
-                <p className="mt-2 text-xs text-muted-foreground md:text-sm">{text}</p>
-              </motion.div>
-            ))}
-          </div>
+      {/* NEW ARRIVALS */}
+      <section className="shell py-16">
+        <SectionTitle kicker="New Arrivals" title="Fresh off the press" sub="The four newest pieces in the Jersey Fit locker — premium ready-to-wear, dispatched in 24–48 hours." />
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          {newArrivals.map((p) => <ProductCard key={p.id} product={p} />)}
+        </div>
+        <div className="mt-10 flex flex-wrap justify-center gap-3">
+          <Link to="/premium-collection"><Button size="lg" variant="lime">Explore the Premium Collection →</Button></Link>
+          <Link to="/shop" search={{ category: "all" }}><Button size="lg" variant="outline">View all jerseys</Button></Link>
         </div>
       </section>
 
-      {/* ABOUT */}
-      <section id="about" className="shell scroll-mt-24 py-20">
-        <div className="grid items-center gap-10 lg:grid-cols-2">
+      {/* ABOUT — premium bento */}
+      <section id="about" className="relative scroll-mt-24 overflow-hidden border-y border-border bg-surface/40 py-20">
+        <div className="shell grid gap-10 lg:grid-cols-[1.05fr_1fr] lg:items-center">
           <div>
-            <span className="text-xs font-extrabold uppercase tracking-[0.25em] text-lime">About Us</span>
-            <h2 className="mt-3 text-3xl sm:text-5xl">
-              We print kits that <span className="text-gradient">feel like a brand</span>
+            <span className="inline-flex items-center gap-2 rounded-full border border-lime/40 bg-lime/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.25em] text-lime">
+              <span className="h-1.5 w-1.5 rounded-full bg-lime" aria-hidden="true" /> About Us
+            </span>
+            <h2 className="mt-4 text-3xl sm:text-5xl">
+              Born in Tirupur.<br /><span className="text-gradient">Worn across India.</span>
             </h2>
             <p className="mt-5 text-sm text-muted-foreground sm:text-base">
-              Jersey Fit started in 2016 on a single sublimation press in Tirupur. Today our team of 64 prints,
-              stitches and ships squad kits for more than 1,400 clubs, academies and corporate leagues across India.
+              Jersey Fit started in 2016 with a single sublimation press in Tirupur — India's knitwear capital.
+              Today an 18,000 sq ft in-house floor prints, stitches and ships squad kits for more than 1,400
+              clubs, academies and corporate leagues across the country.
             </p>
             <p className="mt-4 text-sm text-muted-foreground sm:text-base">
-              We only make top wear — jerseys. That focus is why our print registration, fabric weight and sizing
-              stay consistent whether you order 10 pieces or 10,000.
+              We only make jerseys. That single-minded focus is why our print registration, fabric weight and
+              sizing stay consistent whether you order 10 pieces or 10,000.
             </p>
-            <div className="mt-7 flex gap-3">
-              <Link to="/shop" search={{ category: "all" }}><Button>Browse jerseys</Button></Link>
-              <Link to="/contact"><Button variant="outline">Talk to us</Button></Link>
+            <div className="mt-6 flex flex-wrap gap-2.5">
+              {[
+                { icon: Icons.ShieldCheck, title: "Bio-Washed Cotton", sub: "Soft hand-feel, zero shrink" },
+                { icon: Icons.Wind, title: "Aero-Poly Knit", sub: "Feather-light, fast-dry" },
+              ].map(({ icon: Icon, title, sub }) => (
+                <span key={title} className="flex items-center gap-2.5 rounded-xl border border-lime/30 bg-background/60 px-3.5 py-2.5">
+                  <Icon className="h-5 w-5 shrink-0 text-lime" />
+                  <span className="min-w-0">
+                    <span className="block text-xs font-extrabold uppercase tracking-wide">{title}</span>
+                    <span className="block text-[11px] text-muted-foreground">{sub}</span>
+                  </span>
+                </span>
+              ))}
+            </div>
+            <div className="mt-7 grid grid-cols-3 gap-3">
+              {[
+                { value: "1,400+", label: "Clubs & academies" },
+                { value: "64", label: "Print & stitch pros" },
+                { value: "9 yrs", label: "Of jersey craft" },
+              ].map((s) => (
+                <Card key={s.label} className="text-center">
+                  <span className="display text-xl text-gradient sm:text-2xl">{s.value}</span>
+                  <p className="mt-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground sm:text-xs">{s.label}</p>
+                </Card>
+              ))}
+            </div>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Link to="/premium-collection"><Button size="lg" variant="lime">Explore Collection</Button></Link>
+              <Link to="/contact"><Button size="lg" variant="outline">Contact Us</Button></Link>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            {[j1, j2, j3, hero].map((src, i) => (
-              <motion.img key={i} src={src} alt="Jersey Fit production and products" loading="lazy" width={1024} height={1024}
-                initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-                transition={{ delay: i * 0.08 }}
-                className={`h-full w-full rounded-2xl border border-border object-cover ${i % 3 === 0 ? "aspect-square" : "aspect-4/5"}`} />
+          <div className="grid grid-cols-2 gap-3 sm:gap-4">
+            <motion.div className="relative col-span-2 overflow-hidden rounded-2xl border border-border transition-all duration-300 hover:border-lime/50 hover:glow"
+              initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+              <img src={hero} alt="Jersey Fit sublimation floor in Tirupur" loading="lazy" width={1024} height={768}
+                className="aspect-16/10 w-full object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent" />
+              <span className="absolute bottom-3 left-3 rounded-full border border-border bg-background/60 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest backdrop-blur-md">
+                In-house sublimation floor
+              </span>
+            </motion.div>
+            {[
+              { src: j1, label: "Bio-washed premium fabric" },
+              { src: j2, label: "Colour-locked printing" },
+            ].map(({ src, label }, i) => (
+              <motion.div key={label} className="relative overflow-hidden rounded-2xl border border-border transition-all duration-300 hover:border-lime/50 hover:glow"
+                initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: (i + 1) * 0.08 }}>
+                <img src={src} alt={label} loading="lazy" width={1024} height={1024}
+                  className="aspect-square w-full object-cover transition-transform duration-500 hover:scale-105" />
+                <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent" />
+                <span className="absolute bottom-3 left-3 right-3 text-[10px] font-black uppercase tracking-widest">{label}</span>
+              </motion.div>
             ))}
           </div>
         </div>

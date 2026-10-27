@@ -90,7 +90,7 @@ export function Navbar() {
               {TOP_WEAR_SUBCATEGORIES.map((sub) => <Link key={sub.slug} to="/shop" search={{ category: "top-wear", subCategory: sub.slug }} onClick={() => setTopWearOpen(false)} className="block rounded-xl px-3 py-2.5 text-sm font-semibold hover:bg-surface-2">{sub.label}</Link>)}
             </div> : null}
           </div>
-          <Link to="/about" className={navLink}>About Us</Link>
+          <Link to="/premium-collection" className={navLink}>Premium Collection</Link>
           <Link to="/customers" className={navLink}>Our Customers</Link>
           <Link to="/contact" className={navLink}>Contact</Link>
         </nav>
@@ -189,7 +189,7 @@ export function Navbar() {
                   <span className="min-w-0">Jersey Fit Top Wear</span><ChevronDown className={cn("h-4 w-4 shrink-0", topWearAccordion && "rotate-180")} />
                 </Button>
                 {topWearAccordion ? <div>{TOP_WEAR_SUBCATEGORIES.map((sub) => <Link key={sub.slug} onClick={() => setDrawer(false)} to="/shop" search={{ category: "top-wear", subCategory: sub.slug }} className="block rounded-xl px-6 py-3 text-sm font-semibold text-muted-foreground hover:text-foreground">{sub.label}</Link>)}</div> : null}
-                <Link onClick={() => setDrawer(false)} to="/about" className="block rounded-xl px-3 py-3 font-bold uppercase hover:bg-surface-2">About Us</Link>
+                <Link onClick={() => setDrawer(false)} to="/premium-collection" className="block rounded-xl px-3 py-3 font-bold uppercase hover:bg-surface-2">Premium Collection</Link>
                 <Link onClick={() => setDrawer(false)} to="/customers" className="block rounded-xl px-3 py-3 font-bold uppercase hover:bg-surface-2">Our Customers</Link>
                 <Link onClick={() => setDrawer(false)} to="/contact" className="block rounded-xl px-3 py-3 font-bold uppercase hover:bg-surface-2">Contact</Link>
               </nav>
