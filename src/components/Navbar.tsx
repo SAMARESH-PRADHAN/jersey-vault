@@ -26,6 +26,7 @@ export function Navbar() {
     setCatOpen(false);
     setProfileOpen(false);
     setTopWearOpen(false);
+    setWinterOpen(false);
   }, [path]);
 
   useEffect(() => {
@@ -43,6 +44,7 @@ export function Navbar() {
         setCatOpen(false);
         setProfileOpen(false);
         setTopWearOpen(false);
+        setWinterOpen(false);
       }
     };
     window.addEventListener("click", onClick);
