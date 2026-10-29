@@ -119,6 +119,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <AppProvider>
+        <AnnouncementBar />
         <Navbar />
         {/* Required: nested routes render here. */}
         <main>
