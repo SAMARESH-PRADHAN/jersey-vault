@@ -1,4 +1,4 @@
-import type { CategorySlug, Product, TopWearSubCategory } from "@/types";
+import type { CategorySlug, Product, TopWearSubCategory, WinterSubCategory } from "@/types";
 import j1 from "@/assets/jersey-1.jpg";
 import j2 from "@/assets/jersey-2.jpg";
 import j3 from "@/assets/jersey-3.jpg";
@@ -421,6 +421,8 @@ export const PRODUCTS: Product[] = [
 ];
 
 export const getProduct = (id: string) => PRODUCTS.find((p) => p.id === id);
+
+export const WINTER_PRODUCTS = PRODUCTS.filter((p) => p.category === "winter-top-wear");
 
 export const SEED_REVIEWS = [
   { user: "Rohit Sharma", rating: 5, text: "Ordered 22 jerseys for our club — print quality is unreal and delivery was 4 days early." },
