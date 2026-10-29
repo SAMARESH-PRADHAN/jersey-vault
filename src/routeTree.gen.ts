@@ -17,6 +17,7 @@ import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CustomersRouteImport } from './routes/customers'
 import { Route as PremiumCollectionRouteImport } from './routes/premium-collection'
 import { Route as ShopRouteImport } from './routes/shop'
+import { Route as WinterTopWearRouteImport } from './routes/winter-top-wear'
 import { Route as ProductProductIdRouteImport } from './routes/product.$productId'
 import { Route as ProfileAddressRouteImport } from './routes/profile.address'
 import { Route as ProfileOrdersRouteImport } from './routes/profile.orders'
@@ -61,6 +62,11 @@ const ShopRoute = ShopRouteImport.update({
   path: '/shop',
   getParentRoute: () => rootRouteImport,
 } as any)
+const WinterTopWearRoute = WinterTopWearRouteImport.update({
+  id: '/winter-top-wear',
+  path: '/winter-top-wear',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProductProductIdRoute = ProductProductIdRouteImport.update({
   id: '/product/$productId',
   path: '/product/$productId',
@@ -86,6 +92,7 @@ export interface FileRoutesByFullPath {
   '/customers': typeof CustomersRoute
   '/premium-collection': typeof PremiumCollectionRoute
   '/shop': typeof ShopRoute
+  '/winter-top-wear': typeof WinterTopWearRoute
   '/product/$productId': typeof ProductProductIdRoute
   '/profile/address': typeof ProfileAddressRoute
   '/profile/orders': typeof ProfileOrdersRoute
@@ -99,6 +106,7 @@ export interface FileRoutesByTo {
   '/customers': typeof CustomersRoute
   '/premium-collection': typeof PremiumCollectionRoute
   '/shop': typeof ShopRoute
+  '/winter-top-wear': typeof WinterTopWearRoute
   '/product/$productId': typeof ProductProductIdRoute
   '/profile/address': typeof ProfileAddressRoute
   '/profile/orders': typeof ProfileOrdersRoute
@@ -113,6 +121,7 @@ export interface FileRoutesById {
   '/customers': typeof CustomersRoute
   '/premium-collection': typeof PremiumCollectionRoute
   '/shop': typeof ShopRoute
+  '/winter-top-wear': typeof WinterTopWearRoute
   '/product/$productId': typeof ProductProductIdRoute
   '/profile/address': typeof ProfileAddressRoute
   '/profile/orders': typeof ProfileOrdersRoute
@@ -128,6 +137,7 @@ export interface FileRouteTypes {
     | '/customers'
     | '/premium-collection'
     | '/shop'
+    | '/winter-top-wear'
     | '/product/$productId'
     | '/profile/address'
     | '/profile/orders'
@@ -141,6 +151,7 @@ export interface FileRouteTypes {
     | '/customers'
     | '/premium-collection'
     | '/shop'
+    | '/winter-top-wear'
     | '/product/$productId'
     | '/profile/address'
     | '/profile/orders'
@@ -154,6 +165,7 @@ export interface FileRouteTypes {
     | '/customers'
     | '/premium-collection'
     | '/shop'
+    | '/winter-top-wear'
     | '/product/$productId'
     | '/profile/address'
     | '/profile/orders'
@@ -168,6 +180,7 @@ export interface RootRouteChildren {
   CustomersRoute: typeof CustomersRoute
   PremiumCollectionRoute: typeof PremiumCollectionRoute
   ShopRoute: typeof ShopRoute
+  WinterTopWearRoute: typeof WinterTopWearRoute
   ProductProductIdRoute: typeof ProductProductIdRoute
   ProfileAddressRoute: typeof ProfileAddressRoute
   ProfileOrdersRoute: typeof ProfileOrdersRoute
@@ -231,6 +244,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ShopRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/winter-top-wear': {
+      id: '/winter-top-wear'
+      path: '/winter-top-wear'
+      fullPath: '/winter-top-wear'
+      preLoaderRoute: typeof WinterTopWearRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/product/$productId': {
       id: '/product/$productId'
       path: '/product/$productId'
@@ -264,6 +284,7 @@ const rootRouteChildren: RootRouteChildren = {
   CustomersRoute: CustomersRoute,
   PremiumCollectionRoute: PremiumCollectionRoute,
   ShopRoute: ShopRoute,
+  WinterTopWearRoute: WinterTopWearRoute,
   ProductProductIdRoute: ProductProductIdRoute,
   ProfileAddressRoute: ProfileAddressRoute,
   ProfileOrdersRoute: ProfileOrdersRoute,

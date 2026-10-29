@@ -4,7 +4,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown, LogOut, MapPin, Menu, Package, ShoppingCart, User as UserIcon, X } from "lucide-react";
 import { Button } from "@/components/ui/kit";
-import { CATEGORIES, TOP_WEAR_SUBCATEGORIES } from "@/data/products";
+import { CATEGORIES, TOP_WEAR_SUBCATEGORIES, WINTER_SUBCATEGORIES } from "@/data/products";
 import { useApp } from "@/store/app";
 import { cn } from "@/lib/utils";
 
@@ -16,6 +16,8 @@ export function Navbar() {
   const [accordion, setAccordion] = useState(false);
   const [topWearOpen, setTopWearOpen] = useState(false);
   const [topWearAccordion, setTopWearAccordion] = useState(false);
+  const [winterOpen, setWinterOpen] = useState(false);
+  const [winterAccordion, setWinterAccordion] = useState(false);
   const path = useRouterState({ select: (s) => s.location.pathname });
   const wrap = useRef<HTMLDivElement>(null);
 
