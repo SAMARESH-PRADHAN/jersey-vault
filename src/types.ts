@@ -10,9 +10,11 @@ export type CategorySlug =
   | "ganesh-puja"
   | "morning-walk"
   | "marathon"
-  | "top-wear";
+  | "top-wear"
+  | "winter-top-wear";
 
 export type TopWearSubCategory = "all" | "round-neck" | "polo-neck";
+export type WinterSubCategory = "all" | "hoodie" | "sweatshirt" | "oversized-tshirt";
 
 export interface Product {
   id: string;
@@ -27,7 +29,7 @@ export interface Product {
   rating: number;
   tag?: string;
   isExclusiveTopWear?: boolean;
-  subCategory?: "round-neck" | "polo-neck";
+  subCategory?: "round-neck" | "polo-neck" | "hoodie" | "sweatshirt" | "oversized-tshirt";
 }
 
 export type PrintType = "Sublimation Print" | "DTF Print" | "No Print";
