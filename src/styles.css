@@ -160,6 +160,20 @@
   animation-play-state: paused;
 }
 
+/* Announcement ticker (above navbar) */
+.ticker-track {
+  display: flex;
+  width: max-content;
+  animation: jf-marquee 30s linear infinite;
+}
+.ticker:hover .ticker-track,
+.ticker:focus-within .ticker-track {
+  animation-play-state: paused;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ticker-track { animation: none; }
+}
+
 /* Skeleton shimmer */
 @keyframes jf-shimmer {
   100% { transform: translateX(100%); }

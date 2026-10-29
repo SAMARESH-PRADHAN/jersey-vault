@@ -1,4 +1,4 @@
-import type { CategorySlug, Product, TopWearSubCategory } from "@/types";
+import type { CategorySlug, Product, TopWearSubCategory, WinterSubCategory } from "@/types";
 import j1 from "@/assets/jersey-1.jpg";
 import j2 from "@/assets/jersey-2.jpg";
 import j3 from "@/assets/jersey-3.jpg";
@@ -31,6 +31,20 @@ export const TOP_WEAR_SUBCATEGORIES: { slug: TopWearSubCategory; label: string }
   { slug: "all", label: "All Top Wear" },
   { slug: "round-neck", label: "Round Neck T-Shirts" },
   { slug: "polo-neck", label: "Polo Neck T-Shirts" },
+];
+
+export const WINTER_TOP_WEAR_CATEGORY = {
+  slug: "winter-top-wear" as const,
+  label: "Winter Top Wear",
+  image: hero,
+  description: "Heavyweight hoodies, sweatshirts and oversized tees for cold mornings and winter training.",
+};
+
+export const WINTER_SUBCATEGORIES: { slug: WinterSubCategory; label: string }[] = [
+  { slug: "all", label: "All Winter Top Wear" },
+  { slug: "hoodie", label: "Premium Hoodies" },
+  { slug: "sweatshirt", label: "Sweatshirts" },
+  { slug: "oversized-tshirt", label: "Oversized T-Shirts" },
 ];
 
 export const getCategory = (slug: CategorySlug | "all") =>
@@ -376,9 +390,39 @@ export const PRODUCTS: Product[] = [
     description: "A classic pique polo with a structured collar and breathable honeycomb texture for everyday club style.",
     images: gallery(j3), rating: 4.8, tag: "Premium",
   },
+  {
+    id: "p27", code: "JF-WT-1301", name: "Arctic Pro Heavyweight Fleece Hoodie",
+    category: "winter-top-wear", subCategory: "hoodie", isExclusiveTopWear: true,
+    price: 1899, mrp: 2699, material: "360 GSM Brushed Cotton Fleece",
+    description: "A heavyweight brushed-fleece hoodie with a double-lined hood and kangaroo pocket for cold morning sessions.",
+    images: gallery(hero), rating: 4.9, tag: "Winter Drop",
+  },
+  {
+    id: "p28", code: "JF-WT-1302", name: "Clubhouse Classic Athletic Sweatshirt",
+    category: "winter-top-wear", subCategory: "sweatshirt", isExclusiveTopWear: true,
+    price: 1499, mrp: 2199, material: "320 GSM French Terry",
+    description: "A classic crew-neck sweatshirt in soft French terry with ribbed cuffs and a relaxed athletic cut.",
+    images: gallery(j1), rating: 4.8, tag: "New",
+  },
+  {
+    id: "p29", code: "JF-WT-1303", name: "Urban Boxy Heavyweight Oversized Tee",
+    category: "winter-top-wear", subCategory: "oversized-tshirt", isExclusiveTopWear: true,
+    price: 1199, mrp: 1799, material: "240 GSM Bio-Washed Combed Cotton",
+    description: "A boxy oversized tee with drop shoulders and a premium bio-washed finish for layering or standalone style.",
+    images: gallery(j2), rating: 4.7, tag: "New",
+  },
+  {
+    id: "p30", code: "JF-WT-1304", name: "Frost Performance Tech Fleece Hoodie",
+    category: "winter-top-wear", subCategory: "hoodie", isExclusiveTopWear: true,
+    price: 1999, mrp: 2899, material: "380 GSM Thermal Poly Fleece",
+    description: "Thermal poly fleece with a brushed inner lining — engineered for winter training, travel and terrace cheering.",
+    images: gallery(j3), rating: 4.9, tag: "Premium",
+  },
 ];
 
 export const getProduct = (id: string) => PRODUCTS.find((p) => p.id === id);
+
+export const WINTER_PRODUCTS = PRODUCTS.filter((p) => p.category === "winter-top-wear");
 
 export const SEED_REVIEWS = [
   { user: "Rohit Sharma", rating: 5, text: "Ordered 22 jerseys for our club — print quality is unreal and delivery was 4 days early." },

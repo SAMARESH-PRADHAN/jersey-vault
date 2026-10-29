@@ -4,7 +4,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown, LogOut, MapPin, Menu, Package, ShoppingCart, User as UserIcon, X } from "lucide-react";
 import { Button } from "@/components/ui/kit";
-import { CATEGORIES, TOP_WEAR_SUBCATEGORIES } from "@/data/products";
+import { CATEGORIES, TOP_WEAR_SUBCATEGORIES, WINTER_SUBCATEGORIES } from "@/data/products";
 import { useApp } from "@/store/app";
 import { cn } from "@/lib/utils";
 
@@ -16,6 +16,8 @@ export function Navbar() {
   const [accordion, setAccordion] = useState(false);
   const [topWearOpen, setTopWearOpen] = useState(false);
   const [topWearAccordion, setTopWearAccordion] = useState(false);
+  const [winterOpen, setWinterOpen] = useState(false);
+  const [winterAccordion, setWinterAccordion] = useState(false);
   const path = useRouterState({ select: (s) => s.location.pathname });
   const wrap = useRef<HTMLDivElement>(null);
 
@@ -24,6 +26,7 @@ export function Navbar() {
     setCatOpen(false);
     setProfileOpen(false);
     setTopWearOpen(false);
+    setWinterOpen(false);
   }, [path]);
 
   useEffect(() => {
@@ -41,6 +44,7 @@ export function Navbar() {
         setCatOpen(false);
         setProfileOpen(false);
         setTopWearOpen(false);
+        setWinterOpen(false);
       }
     };
     window.addEventListener("click", onClick);
@@ -84,10 +88,21 @@ export function Navbar() {
           </div>
           <div className="relative">
             <Button variant="ghost" className={cn(navLink, "h-auto rounded-none p-0 hover:bg-transparent")} onClick={() => setTopWearOpen((v) => !v)} aria-expanded={topWearOpen}>
-              Jersey Fit Top Wear <ChevronDown className="h-4 w-4" />
+              Top Wear <ChevronDown className="h-4 w-4" />
             </Button>
             {topWearOpen ? <div className="panel absolute left-0 top-9 w-64 p-2">
               {TOP_WEAR_SUBCATEGORIES.map((sub) => <Link key={sub.slug} to="/shop" search={{ category: "top-wear", subCategory: sub.slug }} onClick={() => setTopWearOpen(false)} className="block rounded-xl px-3 py-2.5 text-sm font-semibold hover:bg-surface-2">{sub.label}</Link>)}
+            </div> : null}
+          </div>
+          <div className="relative">
+            <Button variant="ghost" className={cn(navLink, "h-auto rounded-none p-0 hover:bg-transparent")} onClick={() => setWinterOpen((v) => !v)} aria-expanded={winterOpen}>
+              Winter Top Wear <ChevronDown className="h-4 w-4" />
+            </Button>
+            {winterOpen ? <div className="panel absolute left-0 top-9 w-64 p-2">
+              <Link to="/winter-top-wear" onClick={() => setWinterOpen(false)} className="block rounded-xl px-3 py-2.5 text-sm font-semibold hover:bg-surface-2">All Winter Top Wear</Link>
+              {WINTER_SUBCATEGORIES.filter((item) => item.slug !== "all").map((sub) => (
+                <Link key={sub.slug} to="/winter-top-wear" search={{ sub: sub.slug }} onClick={() => setWinterOpen(false)} className="block rounded-xl px-3 py-2.5 text-sm font-semibold hover:bg-surface-2">{sub.label}</Link>
+              ))}
             </div> : null}
           </div>
           <Link to="/premium-collection" className={navLink}>Premium Collection</Link>
@@ -186,9 +201,20 @@ export function Navbar() {
                   ) : null}
                 </AnimatePresence>
                 <Button variant="ghost" onClick={() => setTopWearAccordion((v) => !v)} aria-expanded={topWearAccordion} className="h-auto min-h-12 w-full justify-between rounded-xl px-3 py-3 text-left font-bold uppercase text-foreground">
-                  <span className="min-w-0">Jersey Fit Top Wear</span><ChevronDown className={cn("h-4 w-4 shrink-0", topWearAccordion && "rotate-180")} />
+                  <span className="min-w-0">Top Wear</span><ChevronDown className={cn("h-4 w-4 shrink-0", topWearAccordion && "rotate-180")} />
                 </Button>
                 {topWearAccordion ? <div>{TOP_WEAR_SUBCATEGORIES.map((sub) => <Link key={sub.slug} onClick={() => setDrawer(false)} to="/shop" search={{ category: "top-wear", subCategory: sub.slug }} className="block rounded-xl px-6 py-3 text-sm font-semibold text-muted-foreground hover:text-foreground">{sub.label}</Link>)}</div> : null}
+                <button onClick={() => setWinterAccordion((v) => !v)} aria-expanded={winterAccordion}
+                  className="flex w-full items-center justify-between rounded-xl px-3 py-3 font-bold uppercase hover:bg-surface-2">
+                  Winter Top Wear
+                  <ChevronDown className={cn("h-4 w-4 transition-transform", winterAccordion && "rotate-180")} />
+                </button>
+                {winterAccordion ? <div>
+                  <Link onClick={() => setDrawer(false)} to="/winter-top-wear" className="block rounded-xl px-6 py-3 text-sm font-semibold text-muted-foreground hover:text-foreground">All Winter Top Wear</Link>
+                  {WINTER_SUBCATEGORIES.filter((item) => item.slug !== "all").map((sub) => (
+                    <Link key={sub.slug} onClick={() => setDrawer(false)} to="/winter-top-wear" search={{ sub: sub.slug }} className="block rounded-xl px-6 py-3 text-sm font-semibold text-muted-foreground hover:text-foreground">{sub.label}</Link>
+                  ))}
+                </div> : null}
                 <Link onClick={() => setDrawer(false)} to="/premium-collection" className="block rounded-xl px-3 py-3 font-bold uppercase hover:bg-surface-2">Premium Collection</Link>
                 <Link onClick={() => setDrawer(false)} to="/customers" className="block rounded-xl px-3 py-3 font-bold uppercase hover:bg-surface-2">Our Customers</Link>
                 <Link onClick={() => setDrawer(false)} to="/contact" className="block rounded-xl px-3 py-3 font-bold uppercase hover:bg-surface-2">Contact</Link>
