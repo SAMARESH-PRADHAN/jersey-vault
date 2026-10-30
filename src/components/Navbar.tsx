@@ -51,7 +51,7 @@ export function Navbar() {
     return () => window.removeEventListener("click", onClick);
   }, []);
 
-  const navLink = "text-sm font-bold uppercase tracking-wide text-muted-foreground transition-colors hover:text-foreground";
+  const navLink = "whitespace-nowrap text-sm font-bold uppercase tracking-wide text-muted-foreground transition-colors hover:text-foreground";
 
   return (
     <header className="sticky top-0 z-50 border-b border-border/80 bg-background/85 backdrop-blur-xl">

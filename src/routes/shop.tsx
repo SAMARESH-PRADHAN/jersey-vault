@@ -34,7 +34,7 @@ export const Route = createFileRoute("/shop")({
 
 const PAGE = 8;
 const MAXP = 2000;
-const MATERIALS = Array.from(new Set(PRODUCTS.map((product) => product.material))).sort();
+const MATERIALS = Array.from(new Set(PRODUCTS.filter((product) => product.category !== "winter-top-wear").map((product) => product.material))).sort();
 
 function Shop() {
   const category = Route.useSearch().category ?? "all";
@@ -56,7 +56,7 @@ function Shop() {
   }, [category, subCategory, sort, range[0], range[1], materials]);
 
   const list = useMemo(() => {
-    let l = PRODUCTS.filter((p) => (category === "all" ? true : p.category === category));
+    let l = PRODUCTS.filter((p) => (category === "all" ? p.category !== "winter-top-wear" : p.category === category));
     if (category === "top-wear" && subCategory !== "all") l = l.filter((p) => p.subCategory === subCategory);
     l = l.filter((p) => p.price >= range[0] && p.price <= range[1]);
     if (materials.length) l = l.filter((p) => materials.includes(p.material));
