@@ -16,9 +16,9 @@ export interface ShopFilters {
   sort: ShopSort;
 }
 export const MAX_PRICE = 2000;
-export const SHOP_MATERIALS = Array.from(new Set(PRODUCTS.map((p) => p.material))).sort();
+export const SHOP_MATERIALS = Array.from(new Set(PRODUCTS.filter((p) => p.category !== "winter-top-wear").map((p) => p.material))).sort();
 export const matchingProducts = (filters: ShopFilters) => PRODUCTS.filter((p) =>
-  (filters.category === "all" || p.category === filters.category) &&
+  (filters.category === "all" ? p.category !== "winter-top-wear" : p.category === filters.category) &&
   (filters.category !== "top-wear" || filters.subCategory === "all" || p.subCategory === filters.subCategory) &&
   p.price >= filters.range[0] && p.price <= filters.range[1] &&
   (!filters.materials.length || filters.materials.includes(p.material))
