@@ -1,3 +1,11 @@
+# Winter Top Wear + announcement ticker
+- [x] Rename navbar "Jersey Fit Top Wear" to "Top Wear"; add "Winter Top Wear" link (desktop dropdown + mobile accordion) before Premium Collection.
+- [x] Announcement ticker marquee above the navbar on every page.
+- [x] Winter catalog: category "winter-top-wear", subcategories hoodie/sweatshirt/oversized-tshirt, products p27–p30 (readymade, 3-piece cap).
+- [x] /winter-top-wear page: banner, subcategory tabs, price + sort filters, mobile filter sheet, ProductCard grid.
+- [x] Homepage Winter Top Wear section after Custom Team Jersey.
+- [x] Keep winter items out of /shop results and shop material filters.
+
 # Mobile shopping updates
 - [x] Close mobile navigation on every selection; add Top Wear quick links.
 - [x] Add mobile draft filter sheet, applied results, and Top Wear subcategories.

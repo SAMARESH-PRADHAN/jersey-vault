@@ -12,6 +12,7 @@
 ## Project architecture
 
 - Keep category labels, banner images, descriptions, and catalog membership centralized in `src/data/products.ts` so navigation and collection pages cannot drift.
-- Treat `top-wear` products as ready-to-wear inventory with no custom print options and a hard three-piece total limit.
+- Treat `top-wear` and `winter-top-wear` products as ready-to-wear inventory with no custom print options and a hard three-piece total limit.
+- Keep `winter-top-wear` out of `/shop` results and its filter lists — Winter Top Wear sells only on its own page, following the premium-collection readymade pattern.
 - Keep Top Wear subcategory labels in the catalog and selection in validated shop search params so navigation and filters stay consistent.
 - Mobile shop filters use a separate draft sheet and commit only on Apply so desktop sidebar interactions remain unchanged.
