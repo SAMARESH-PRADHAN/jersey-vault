@@ -61,7 +61,8 @@ function Counter({ value, suffix }: { value: number; suffix: string }) {
 function Home() {
   const featured = PRODUCTS.slice(0, 4);
   const topWearProducts = PRODUCTS.filter((p) => p.category === "top-wear").slice(-4);
-  const newArrivals = PRODUCTS.slice(-4);
+  const winterProducts = PRODUCTS.filter((p) => p.category === "winter-top-wear");
+  const newArrivals = PRODUCTS.filter((p) => p.category === "top-wear").slice(0, 4);
 
   return (
     <>
@@ -92,6 +93,19 @@ function Home() {
               </Link>
             </motion.div>
           ))}
+        </div>
+      </section>
+
+      {/* WINTER TOP WEAR */}
+      <section className="border-y border-border bg-surface/40 py-16">
+        <div className="shell">
+          <SectionTitle kicker="Cold Weather Performance" title="Winter Top Wear" sub="Heavyweight hoodies, sweatshirts and oversized tees for chilly mornings and winter training." />
+          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+            {winterProducts.map((p) => <ProductCard key={p.id} product={p} />)}
+          </div>
+          <div className="mt-10 text-center">
+            <Link to="/winter-top-wear"><Button size="lg" variant="lime">Explore All Winter Top Wear →</Button></Link>
+          </div>
         </div>
       </section>
 
