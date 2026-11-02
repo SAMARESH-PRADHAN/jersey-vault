@@ -86,6 +86,9 @@ function CartPage() {
                         </ul>
                       </details>
                     ) : null}
+                    {item.rosterName ? (
+                      <p className="mt-2 text-xs font-bold text-accent">Team roster attached: {item.rosterName}</p>
+                    ) : null}
                     {item.note ? <p className="mt-2 text-xs italic text-muted-foreground">Note: {item.note}</p> : null}
                   </div>
                   <div className="flex flex-col items-end justify-between gap-2">
