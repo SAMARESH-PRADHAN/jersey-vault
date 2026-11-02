@@ -425,6 +425,34 @@ export const PRODUCTS: Product[] = [
     description: "Thermal poly fleece with a brushed inner lining — engineered for winter training, travel and terrace cheering.",
     images: gallery(j3), rating: 4.9, tag: "Premium",
   },
+  {
+    id: "p31", code: "JF-CP-1401", name: "Regal Pro Custom Interlock Jersey",
+    category: "custom-premium",
+    price: 1499, mrp: 2199, material: "220 GSM Signature Interlock",
+    description: "Our signature premium interlock with a silky hand-feel — fully customisable with sublimation, DTF, names, numbers and your club logo.",
+    images: gallery(hero), rating: 4.9, tag: "Signature",
+  },
+  {
+    id: "p32", code: "JF-CP-1402", name: "Imperial Custom Air-Mesh Jersey",
+    category: "custom-premium",
+    price: 1699, mrp: 2499, material: "230 GSM Luxe Air-Mesh Poly",
+    description: "Feather-light luxury air-mesh with colour-locked printing. Build it exactly the way your squad wants it.",
+    images: gallery(j2), rating: 4.8, tag: "Elite",
+  },
+  {
+    id: "p33", code: "JF-CP-1403", name: "Sovereign Custom Dry-Fit Jersey",
+    category: "custom-premium",
+    price: 1299, mrp: 1899, material: "210 GSM Premium Dry Interlock",
+    description: "A premium dry-fit base ready for your crest, sponsor lineup and full squad roster printing.",
+    images: gallery(j1), rating: 4.8, tag: "Premium",
+  },
+  {
+    id: "p34", code: "JF-CP-1404", name: "Apex Elite Custom Matchday Jersey",
+    category: "custom-premium",
+    price: 1899, mrp: 2699, material: "240 GSM Champion-Grade Interlock",
+    description: "Champion-grade fabric with reinforced stitching and the richest colour depth in our range — customised end to end.",
+    images: gallery(j3), rating: 4.9, tag: "Limited",
+  },
 ];
 
 export const getProduct = (id: string) => PRODUCTS.find((p) => p.id === id);
