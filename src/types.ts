@@ -10,6 +10,7 @@ export type CategorySlug =
   | "ganesh-puja"
   | "morning-walk"
   | "marathon"
+  | "custom-premium"
   | "top-wear"
   | "winter-top-wear";
 
@@ -55,6 +56,7 @@ export interface CartItem {
   printType: PrintType;
   printCategories: PrintCategory[];
   logo?: string;
+  rosterName?: string;
   sizes: { size: Size; qty: number }[];
   rows: PersonRow[];
   note: string;
@@ -71,6 +73,9 @@ export interface Address {
   city: string;
   state: string;
   isDefault: boolean;
+  needGstInvoice?: boolean;
+  company?: string;
+  gstin?: string;
 }
 
 export const ORDER_STATUSES = [
@@ -88,6 +93,9 @@ export interface Order {
   items: CartItem[];
   address: Address;
   payment: string;
+  payMode?: "full" | "advance";
+  amountPaid?: number;
+  balancePaid?: boolean;
   subtotal: number;
   discount: number;
   coupon?: string | undefined;

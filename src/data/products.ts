@@ -25,7 +25,14 @@ export const TOP_WEAR_CATEGORY = {
   description: "Exclusive ready-to-wear drops. No customisation, maximum three pieces per order.",
 };
 
-export const SHOP_CATEGORIES = [...CATEGORIES, TOP_WEAR_CATEGORY];
+export const CUSTOM_PREMIUM_CATEGORY = {
+  slug: "custom-premium" as const,
+  label: "Custom Premium Collection",
+  image: hero,
+  description: "Premium fabrics with full customisation — sublimation, DTF, names, numbers and your logo.",
+};
+
+export const SHOP_CATEGORIES = [...CATEGORIES, TOP_WEAR_CATEGORY, CUSTOM_PREMIUM_CATEGORY];
 
 export const TOP_WEAR_SUBCATEGORIES: { slug: TopWearSubCategory; label: string }[] = [
   { slug: "all", label: "All Top Wear" },
