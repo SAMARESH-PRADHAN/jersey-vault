@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { motion, useReducedMotion } from "framer-motion";
-import { SlidersHorizontal, X } from "lucide-react";
+import { SlidersHorizontal, Sparkles, X } from "lucide-react";
 import { Button, Card, ProductSkeleton } from "@/components/ui/kit";
 import { ProductCard } from "@/components/ProductCard";
 import { PRODUCTS } from "@/data/products";
@@ -11,16 +11,16 @@ import hero from "@/assets/hero-1.jpg";
 
 type Sort = "featured" | "low" | "high" | "rating";
 
-const MAXP = 1500;
-const PREMIUM = PRODUCTS.filter((p) => p.category === "top-wear");
+const MAXP = 2500;
+const PREMIUM = PRODUCTS.filter((p) => p.category === "custom-premium");
 
 export const Route = createFileRoute("/premium-collection")({
   head: () => ({
     meta: [
-      { title: "Premium Collection — Exclusive Ready-to-Wear Jerseys | Jersey Fit" },
-      { name: "description", content: "Shop Jersey Fit's premium ready-to-wear jerseys and performance tops. No customisation needed — ships in 24-48 hours across India." },
-      { property: "og:title", content: "Premium Collection — Jersey Fit" },
-      { property: "og:description", content: "Exclusive ready-to-wear jerseys and performance tops, dispatched in 24-48 hours." },
+      { title: "Custom Premium Collection — Premium Fabrics, Fully Customisable | Jersey Fit" },
+      { name: "description", content: "Jersey Fit's premium custom collection: heavyweight interlock and luxe mesh jerseys with sublimation, DTF, names, numbers and logo printing. MOQ 5 pieces." },
+      { property: "og:title", content: "Custom Premium Collection — Jersey Fit" },
+      { property: "og:description", content: "Premium fabrics with full customisation — sublimation, DTF, names, numbers and your logo." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -35,7 +35,7 @@ function PremiumCollection() {
   const [sort, setSort] = useState<Sort>("featured");
   const [loading, setLoading] = useState(true);
 
-  // Simulated fetch — swap for GET /api/products?collection=premium later.
+  // Simulated fetch — swap for GET /api/products?collection=custom-premium later.
   useEffect(() => {
     setLoading(true);
     const t = setTimeout(() => setLoading(false), 450);
@@ -60,15 +60,15 @@ function PremiumCollection() {
     <div>
       {/* banner */}
       <section className="relative min-h-[230px] overflow-hidden border-b border-border lg:min-h-[330px]">
-        <img src={hero} alt="Premium Collection banner" width={1600} height={900}
+        <img src={hero} alt="Custom Premium Collection banner" width={1600} height={900}
           className="absolute inset-0 h-full w-full object-cover" />
         <div className="absolute inset-0 bg-background/70" />
         <div className="shell relative flex min-h-[230px] items-end py-8 lg:min-h-[330px] lg:py-12">
           <div className="max-w-3xl">
-            <span className="text-xs font-extrabold uppercase tracking-[0.25em] text-lime">Exclusive Ready-to-Wear</span>
-            <h1 className="mt-3 text-4xl sm:text-6xl">Premium Collection</h1>
+            <span className="text-xs font-extrabold uppercase tracking-[0.25em] text-lime">Premium Fabrics · Full Customisation</span>
+            <h1 className="mt-3 text-4xl sm:text-6xl">Custom Premium <span className="text-gradient">Collection</span></h1>
             <p className="mt-4 max-w-xl text-sm text-foreground/80 sm:text-base">
-              No customisation needed — premium ready-made jerseys and performance tops, dispatched within 24-48 hours.
+              Our richest fabrics with complete customisation — sublimation or DTF printing, player names and numbers, your club logo. Minimum order 5 pieces.
             </p>
           </div>
         </div>
@@ -85,13 +85,13 @@ function PremiumCollection() {
         </div>
       </div>
       {filterOpen ? (
-        <PremiumFilterSheet range={range} sort={sort} onClose={() => setFilterOpen(false)}
-          onApply={(nextRange, nextSort) => { setRange(nextRange); setSort(nextSort); setFilterOpen(false); }} />
+        PremiumFilterSheet({ range, sort, onClose: () => setFilterOpen(false),
+          onApply: (nextRange, nextSort) => { setRange(nextRange); setSort(nextSort); setFilterOpen(false); } })
       ) : null}
 
       <div className="shell py-6 lg:py-12">
         <div className="grid gap-6 lg:grid-cols-[260px_1fr]">
-          {/* filters — price + sort only */}
+          {/* filters — price + sort */}
           <div className="hidden lg:block">
             <Card className="h-fit lg:sticky lg:top-24">
               <h3 className="flex items-center gap-2 text-base"><SlidersHorizontal className="h-4 w-4 text-lime" /> Filters</h3>
@@ -121,7 +121,10 @@ function PremiumCollection() {
                   <option value="rating">Top rated</option>
                 </select>
               </div>
-              <Button variant="outline" className="mt-6 w-full" onClick={resetFilters}>Reset filters</Button>
+              <p className="mt-6 rounded-xl border border-lime/40 bg-lime/10 p-3 text-xs font-bold text-lime">
+                <Sparkles className="mr-1.5 inline h-3.5 w-3.5" />Fully customisable · MOQ: 5 pcs
+              </p>
+              <Button variant="outline" className="mt-4 w-full" onClick={resetFilters}>Reset filters</Button>
             </Card>
           </div>
 
@@ -202,6 +205,9 @@ function PremiumFilterSheet({ range, sort, onClose, onApply }: {
                   <option value="rating">Top rated</option>
                 </select>
               </div>
+              <p className="rounded-xl border border-lime/40 bg-lime/10 p-3 text-xs font-bold text-lime">
+                <Sparkles className="mr-1.5 inline h-3.5 w-3.5" />Fully customisable · MOQ: 5 pcs
+              </p>
             </div>
             <div className="grid shrink-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-3 border-t border-border bg-surface px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
               <Button variant="ghost" className="px-2 text-xs" onClick={() => { setDraftRange([0, MAXP]); setDraftSort("featured"); }}>Reset All</Button>

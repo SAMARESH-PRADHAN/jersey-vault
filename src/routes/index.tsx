@@ -135,12 +135,12 @@ function Home() {
 
       {/* NEW ARRIVALS */}
       <section className="shell py-16">
-        <SectionTitle kicker="New Arrivals" title="Fresh off the press" sub="The four newest pieces in the Jersey Fit locker — premium ready-to-wear, dispatched in 24–48 hours." />
+          <SectionTitle kicker="New Arrivals" title="Fresh off the press" sub="The four newest pieces in the Jersey Fit locker — premium custom-ready fabrics, dispatched fast." />
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
           {newArrivals.map((p) => <ProductCard key={p.id} product={p} />)}
         </div>
         <div className="mt-10 flex flex-wrap justify-center gap-3">
-          <Link to="/premium-collection"><Button size="lg" variant="lime">Explore the Premium Collection →</Button></Link>
+          <Link to="/premium-collection"><Button size="lg" variant="lime">Explore Custom Premium Collection →</Button></Link>
           <Link to="/shop" search={{ category: "all" }}><Button size="lg" variant="outline">View all jerseys</Button></Link>
         </div>
       </section>
@@ -191,7 +191,7 @@ function Home() {
               ))}
             </div>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link to="/premium-collection"><Button size="lg" variant="lime">Explore Collection</Button></Link>
+              <Link to="/premium-collection"><Button size="lg" variant="lime">Explore Custom Premium Collection</Button></Link>
               <Link to="/contact"><Button size="lg" variant="outline">Contact Us</Button></Link>
             </div>
           </div>

@@ -61,7 +61,8 @@ interface AppState {
   setDefaultAddress: (id: string) => void;
 
   orders: Order[];
-  placeOrder: (address: Address, payment: string) => Order;
+  placeOrder: (address: Address, payment: string, payMode?: "full" | "advance") => Order;
+  payBalance: (id: string) => void;
   advanceOrder: (id: string) => void;
 
   reviews: Review[];
@@ -227,13 +228,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   /* ---------------- orders ---------------- */
-  const placeOrder: AppState["placeOrder"] = (address, payment) => {
+  const placeOrder: AppState["placeOrder"] = (address, payment, payMode = "full") => {
+    const advance = payMode === "advance";
     const order: Order = {
       id: `JF${Date.now().toString().slice(-8)}`,
       date: new Date().toISOString(),
       items: cart,
       address,
       payment,
+      payMode,
+      amountPaid: advance ? Math.round(totals.total / 2) : totals.total,
+      balancePaid: !advance,
       subtotal: totals.subtotal,
       discount: totals.discount,
       coupon: coupon?.code,
@@ -246,6 +251,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setCart([]);
     setCoupon(null);
     return order;
+  };
+
+  const payBalance = (id: string) => {
+    setOrders((list) =>
+      list.map((o) => (o.id === id ? { ...o, balancePaid: true, amountPaid: o.total } : o)),
+    );
+    toast.success("Remaining 50% paid — your order is fully settled.");
   };
 
   const advanceOrder = (id: string) => {
@@ -281,7 +293,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       cartCount: cart.reduce((s, i) => s + i.totalQty, 0),
       coupon, applyCoupon, removeCoupon, totals,
       addresses, saveAddress, deleteAddress, setDefaultAddress,
-      orders, placeOrder, advanceOrder,
+      orders, placeOrder, payBalance, advanceOrder,
       reviews, addReview, productReviews,
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -43,6 +43,9 @@ export function ProductCard({ product }: { product: Product }) {
             <span className="display text-xl text-gradient">{inr(product.price)}</span>
             <span className="text-xs text-muted-foreground line-through">{inr(product.mrp)}</span>
           </div>
+          <span className="mt-2 inline-flex rounded-full border border-border bg-surface/60 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-muted-foreground">
+            {product.isExclusiveTopWear ? "MOQ 1 pc · Max 3" : "MOQ 5 pcs"}
+          </span>
         </div>
       </Link>
     </motion.div>

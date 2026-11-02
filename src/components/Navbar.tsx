@@ -82,6 +82,11 @@ export function Navbar() {
                       {c.label}
                     </Link>
                   ))}
+                  <Link to="/premium-collection" onClick={() => setCatOpen(false)}
+                    className="col-span-2 mt-1 flex items-center justify-between rounded-xl border border-lime/40 bg-lime/10 px-3 py-2.5 text-sm font-bold text-lime hover:bg-lime/20">
+                    Custom Premium Collection
+                    <span aria-hidden="true">→</span>
+                  </Link>
                 </motion.div>
               ) : null}
             </AnimatePresence>
@@ -105,7 +110,6 @@ export function Navbar() {
               ))}
             </div> : null}
           </div>
-          <Link to="/premium-collection" className={navLink}>Premium Collection</Link>
           <Link to="/customers" className={navLink}>Our Customers</Link>
           <Link to="/contact" className={navLink}>Contact</Link>
         </nav>
@@ -197,6 +201,10 @@ export function Navbar() {
                           {c.label}
                         </Link>
                       ))}
+                      <Link onClick={() => setDrawer(false)} to="/premium-collection"
+                        className="mx-3 my-1 block rounded-xl border border-lime/40 bg-lime/10 px-3 py-2.5 text-sm font-bold text-lime">
+                        Custom Premium Collection
+                      </Link>
                     </motion.div>
                   ) : null}
                 </AnimatePresence>
@@ -215,7 +223,6 @@ export function Navbar() {
                     <Link key={sub.slug} onClick={() => setDrawer(false)} to="/winter-top-wear" search={{ sub: sub.slug }} className="block rounded-xl px-6 py-3 text-sm font-semibold text-muted-foreground hover:text-foreground">{sub.label}</Link>
                   ))}
                 </div> : null}
-                <Link onClick={() => setDrawer(false)} to="/premium-collection" className="block rounded-xl px-3 py-3 font-bold uppercase hover:bg-surface-2">Premium Collection</Link>
                 <Link onClick={() => setDrawer(false)} to="/customers" className="block rounded-xl px-3 py-3 font-bold uppercase hover:bg-surface-2">Our Customers</Link>
                 <Link onClick={() => setDrawer(false)} to="/contact" className="block rounded-xl px-3 py-3 font-bold uppercase hover:bg-surface-2">Contact</Link>
               </nav>
