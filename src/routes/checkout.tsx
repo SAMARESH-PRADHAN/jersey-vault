@@ -5,6 +5,7 @@ import { Banknote, Building2, CheckCircle2, CreditCard, Loader2, Smartphone } fr
 import { Button, Card, Input } from "@/components/ui/kit";
 import { RequireAuth } from "@/components/RequireAuth";
 import { AddressForm } from "@/routes/profile.address";
+import { getProduct } from "@/data/products";
 import { GST_RATE, useApp } from "@/store/app";
 import { inr } from "@/lib/storage";
 import type { Address } from "@/types";
@@ -43,6 +44,7 @@ function Checkout() {
   const [addrId, setAddrId] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
   const [method, setMethod] = useState<string>("UPI");
+  const [payMode, setPayMode] = useState<"full" | "advance">("full");
   const [pay, setPay] = useState({ upi: "", card: "", expiry: "", cvv: "", bank: "HDFC Bank" });
   const [payErrors, setPayErrors] = useState<Record<string, string>>({});
   const [processing, setProcessing] = useState(false);
@@ -62,6 +64,15 @@ function Checkout() {
 
   const address: Address | undefined = addresses.find((a) => a.id === addrId);
 
+  // Customisable cart (custom team jerseys / custom premium) allows the 50% advance;
+  // a readymade-only cart (Top Wear, Winter Top Wear) must pay in full.
+  const hasCustom = cart.some((i) => {
+    const p = getProduct(i.productId);
+    return !!p && !p.isExclusiveTopWear;
+  });
+  const dueNow = payMode === "advance" ? Math.round(totals.total / 2) : totals.total;
+  const balance = totals.total - dueNow;
+
   const validatePayment = () => {
     const e: Record<string, string> = {};
     if (method === "UPI" && !/^[\w.\-]{2,}@[a-z]{2,}$/i.test(pay.upi)) e["upi"] = "Enter a valid UPI ID (name@bank).";
@@ -79,7 +90,7 @@ function Checkout() {
     setProcessing(true);
     // SWAP POINT: POST /api/orders with a real payment gateway callback.
     setTimeout(() => {
-      const order = placeOrder(address, method);
+      const order = placeOrder(address, method, payMode);
       setProcessing(false);
       setSuccess(order.id);
       setTimeout(() => navigate({ to: "/profile/orders" }), 3000);
@@ -143,6 +154,23 @@ function Checkout() {
           {step === 1 ? (
             <Card>
               <h2 className="text-lg">Payment method</h2>
+              {hasCustom ? (
+                <fieldset className="mt-4">
+                  <legend className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Payment amount</legend>
+                  <div className="mt-2 grid gap-3 sm:grid-cols-2">
+                    <label className={`cursor-pointer rounded-xl border-2 p-4 ${payMode === "full" ? "border-primary bg-primary/10" : "border-border"}`}>
+                      <input type="radio" name="payMode" checked={payMode === "full"} onChange={() => setPayMode("full")} className="mr-2 accent-[var(--color-primary)]" />
+                      <span className="text-sm font-extrabold">Pay 100% Full</span>
+                      <span className="mt-1 block text-xs text-muted-foreground">{inr(totals.total)} now — nothing pending later.</span>
+                    </label>
+                    <label className={`cursor-pointer rounded-xl border-2 p-4 ${payMode === "advance" ? "border-primary bg-primary/10" : "border-border"}`}>
+                      <input type="radio" name="payMode" checked={payMode === "advance"} onChange={() => setPayMode("advance")} className="mr-2 accent-[var(--color-primary)]" />
+                      <span className="text-sm font-extrabold">Pay 50% Advance</span>
+                      <span className="mt-1 block text-xs text-muted-foreground">{inr(Math.round(totals.total / 2))} now · balance due on dispatch.</span>
+                    </label>
+                  </div>
+                </fieldset>
+              ) : null}
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
                 {METHODS.map(({ id, label, Icon, hint }) => (
                   <label key={id} className={`cursor-pointer rounded-xl border-2 p-4 ${method === id ? "border-primary bg-primary/10" : "border-border"}`}>
@@ -203,6 +231,16 @@ function Checkout() {
                 <p className="text-sm text-muted-foreground">{address?.house}, {address?.city}, {address?.state} — {address?.pincode}</p>
                 <p className="mt-3 text-xs font-bold uppercase tracking-wider text-muted-foreground">Paying with</p>
                 <p className="text-sm font-extrabold">{method}</p>
+                <p className="mt-3 text-xs font-bold uppercase tracking-wider text-muted-foreground">Payable now</p>
+                <p className="text-sm font-extrabold">
+                  {inr(dueNow)}{payMode === "advance" ? ` · Balance ${inr(balance)} on dispatch` : " · Full payment"}
+                </p>
+                {address?.company && address?.gstin ? (
+                  <>
+                    <p className="mt-3 text-xs font-bold uppercase tracking-wider text-muted-foreground">GST invoice for</p>
+                    <p className="text-sm font-extrabold">{address.company} · {address.gstin}</p>
+                  </>
+                ) : null}
               </div>
               <ul className="mt-4 space-y-2">
                 {cart.map((i) => (
@@ -215,7 +253,7 @@ function Checkout() {
               <div className="mt-6 flex gap-3">
                 <Button variant="outline" onClick={() => setStep(1)} disabled={processing}>Back</Button>
                 <Button className="flex-1" size="lg" variant="lime" onClick={confirm} disabled={processing}>
-                  {processing ? <><Loader2 className="h-4 w-4 animate-spin" /> Processing payment…</> : `Pay ${inr(totals.total)}`}
+                  {processing ? <><Loader2 className="h-4 w-4 animate-spin" /> Processing payment…</> : `Pay ${inr(dueNow)}${payMode === "advance" ? " (50% Advance)" : ""}`}
                 </Button>
               </div>
             </Card>
