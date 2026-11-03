@@ -56,7 +56,16 @@ export function AddressForm({
       err.gstin = "Enter a valid 15-character GSTIN (e.g. 33ABCDE1234F1Z5).";
     setErrors(err);
     if (Object.keys(err).length) return;
-    onSave({ ...form, gstin: form.gstin.trim().toUpperCase() || undefined }, initial?.id);
+    const gstin = form.gstin.trim().toUpperCase();
+    const company = form.company.trim();
+    onSave(
+      {
+        ...form,
+        ...(company ? { company } : {}),
+        ...(gstin ? { gstin } : {}),
+      },
+      initial?.id,
+    );
     if (!initial) setForm(blank);
   };
 
