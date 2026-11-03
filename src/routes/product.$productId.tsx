@@ -1,10 +1,11 @@
 import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { ChevronLeft, ChevronRight, Minus, Plus, ShoppingCart, Upload, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, FileDown, FileUp, Minus, Plus, ShoppingCart, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button, Card, Stars } from "@/components/ui/kit";
 import { ProductCard } from "@/components/ProductCard";
+import { ShareWidget } from "@/components/ShareWidget";
 import { DESIGN_GUIDELINES, WASH_CARE } from "@/data/content";
 import { PRINT_CHARGES, PRODUCTS, getProduct } from "@/data/products";
 import { inr, uid } from "@/lib/storage";
@@ -49,13 +50,14 @@ function ProductDetail() {
   const [qty, setQty] = useState<Record<string, number>>({});
   const [rows, setRows] = useState<Record<string, { name: string; number: string }>>({});
   const [note, setNote] = useState("");
+  const [rosterName, setRosterName] = useState<string | undefined>(undefined);
   const [tab, setTab] = useState<Tab>("overview");
   const [errors, setErrors] = useState<string[]>([]);
   const railRef = useRef<HTMLDivElement>(null);
   const isTopWear = product.isExclusiveTopWear || product.category === "top-wear";
 
   useEffect(() => {
-    setActive(0); setQty({}); setRows({}); setCats([]); setLogo(undefined); setNote("");
+    setActive(0); setQty({}); setRows({}); setCats([]); setLogo(undefined); setNote(""); setRosterName(undefined);
     setPrintType(product.isExclusiveTopWear || product.category === "top-wear" ? "No Print" : "Sublimation Print");
   }, [product.category, product.id, product.isExclusiveTopWear]);
 
@@ -106,6 +108,60 @@ function ProductDetail() {
     const reader = new FileReader();
     reader.onload = () => setLogo(String(reader.result));
     reader.readAsDataURL(file);
+  };
+
+  // Bulk roster upload — offered once the order exceeds 15 pieces.
+  const onRoster = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!/\.(csv|xlsx|xls|pdf)$/i.test(file.name)) {
+      toast.error("Upload a CSV, Excel or PDF roster file.");
+      return;
+    }
+    if (file.size > 2_000_000) {
+      toast.error("Roster file must be under 2 MB.");
+      return;
+    }
+    if (file.name.toLowerCase().endsWith(".csv")) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const lines = String(reader.result)
+          .split(/\r?\n/)
+          .map((l) => l.trim())
+          .filter(Boolean)
+          .slice(1); // skip the header row
+        const next = { ...rows };
+        rowKeys.forEach(({ key }, i) => {
+          const cols = (lines[i] ?? "").split(",");
+          if (cols.length >= 2 || (cols[0] ?? "").length > 0) {
+            next[key] = {
+              name: (cols[1] ?? "").trim(),
+              number: (cols[2] ?? "").replace(/\D/g, "").slice(0, 2),
+            };
+          }
+        });
+        setRows(next);
+        setRosterName(file.name);
+        toast.success(`Roster attached — ${Math.min(lines.length, rowKeys.length)} players imported from CSV.`);
+      };
+      reader.readAsText(file);
+    } else {
+      // Excel / PDF rosters travel with the order as an attachment for production.
+      setRosterName(file.name);
+      toast.success("Roster file attached — our production team will print from it.");
+    }
+    e.target.value = "";
+  };
+
+  const downloadRosterTemplate = () => {
+    const csv = ["Size,Name,Number", "S,Rahul,7", "M,Vikram,10", "L,Arjun,18", "XL,Sameer,3"].join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "JerseyFit-Team-Roster-Template.csv";
+    link.click();
+    URL.revokeObjectURL(url);
   };
 
   const submit = () => {
