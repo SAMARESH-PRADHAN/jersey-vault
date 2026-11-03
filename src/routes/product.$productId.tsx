@@ -1,10 +1,11 @@
 import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { ChevronLeft, ChevronRight, Minus, Plus, ShoppingCart, Upload, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, FileDown, FileUp, Minus, Plus, ShoppingCart, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button, Card, Stars } from "@/components/ui/kit";
 import { ProductCard } from "@/components/ProductCard";
+import { ShareWidget } from "@/components/ShareWidget";
 import { DESIGN_GUIDELINES, WASH_CARE } from "@/data/content";
 import { PRINT_CHARGES, PRODUCTS, getProduct } from "@/data/products";
 import { inr, uid } from "@/lib/storage";
@@ -49,13 +50,14 @@ function ProductDetail() {
   const [qty, setQty] = useState<Record<string, number>>({});
   const [rows, setRows] = useState<Record<string, { name: string; number: string }>>({});
   const [note, setNote] = useState("");
+  const [rosterName, setRosterName] = useState<string | undefined>(undefined);
   const [tab, setTab] = useState<Tab>("overview");
   const [errors, setErrors] = useState<string[]>([]);
   const railRef = useRef<HTMLDivElement>(null);
   const isTopWear = product.isExclusiveTopWear || product.category === "top-wear";
 
   useEffect(() => {
-    setActive(0); setQty({}); setRows({}); setCats([]); setLogo(undefined); setNote("");
+    setActive(0); setQty({}); setRows({}); setCats([]); setLogo(undefined); setNote(""); setRosterName(undefined);
     setPrintType(product.isExclusiveTopWear || product.category === "top-wear" ? "No Print" : "Sublimation Print");
   }, [product.category, product.id, product.isExclusiveTopWear]);
 
@@ -108,19 +110,73 @@ function ProductDetail() {
     reader.readAsDataURL(file);
   };
 
+  // Bulk roster upload — offered once the order exceeds 15 pieces.
+  const onRoster = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!/\.(csv|xlsx|xls|pdf)$/i.test(file.name)) {
+      toast.error("Upload a CSV, Excel or PDF roster file.");
+      return;
+    }
+    if (file.size > 2_000_000) {
+      toast.error("Roster file must be under 2 MB.");
+      return;
+    }
+    if (file.name.toLowerCase().endsWith(".csv")) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const lines = String(reader.result)
+          .split(/\r?\n/)
+          .map((l) => l.trim())
+          .filter(Boolean)
+          .slice(1); // skip the header row
+        const next = { ...rows };
+        rowKeys.forEach(({ key }, i) => {
+          const cols = (lines[i] ?? "").split(",");
+          if (cols.length >= 2 || (cols[0] ?? "").length > 0) {
+            next[key] = {
+              name: (cols[1] ?? "").trim(),
+              number: (cols[2] ?? "").replace(/\D/g, "").slice(0, 2),
+            };
+          }
+        });
+        setRows(next);
+        setRosterName(file.name);
+        toast.success(`Roster attached — ${Math.min(lines.length, rowKeys.length)} players imported from CSV.`);
+      };
+      reader.readAsText(file);
+    } else {
+      // Excel / PDF rosters travel with the order as an attachment for production.
+      setRosterName(file.name);
+      toast.success("Roster file attached — our production team will print from it.");
+    }
+    e.target.value = "";
+  };
+
+  const downloadRosterTemplate = () => {
+    const csv = ["Size,Name,Number", "S,Rahul,7", "M,Vikram,10", "L,Arjun,18", "XL,Sameer,3"].join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "JerseyFit-Team-Roster-Template.csv";
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   const submit = () => {
     const errs: string[] = [];
     if (totalQty === 0) errs.push("Select at least one size and quantity.");
     if (isTopWear && totalQty > 3) errs.push("Exclusive Top Wear is limited to 3 pieces per order.");
     if (!isTopWear && cats.includes("Logo") && !logo) errs.push("Upload a logo image or uncheck Logo.");
-    if (!isTopWear && needsRows) {
+    if (!isTopWear && needsRows && !rosterName) {
       const missing = rowKeys.some(({ key }) => {
         const r = rows[key];
         if (cats.includes("Name") && !r?.name?.trim()) return true;
         if (cats.includes("Number") && !r?.number?.trim()) return true;
         return false;
       });
-      if (missing) errs.push("Fill in the name and number for every unit.");
+      if (missing) errs.push("Fill in the name and number for every unit, or upload a team roster instead.");
     }
     setErrors(errs);
     if (errs.length) {
@@ -151,6 +207,7 @@ function ProductDetail() {
       printType: isTopWear ? "No Print" : printType,
       printCategories: isTopWear ? [] : cats,
       ...(!isTopWear && logo ? { logo } : {}),
+      ...(rosterName ? { rosterName } : {}),
       sizes: SIZES.filter((s) => (qty[s] ?? 0) > 0).map((s) => ({ size: s, qty: qty[s] ?? 0 })),
       rows: personRows,
       note,
@@ -201,6 +258,8 @@ function ProductDetail() {
           </div>
           <p className="mt-4 text-sm text-muted-foreground">{product.description}</p>
           <p className="mt-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">Material: <span className="text-foreground">{product.material}</span></p>
+          <p className="mt-1 text-xs font-bold uppercase tracking-wider text-muted-foreground">MOQ: <span className="text-lime">{isTopWear ? "1 pc (Max: 3 pcs)" : "5 pcs"}</span> · per piece</p>
+          <ShareWidget name={product.name} code={product.code} />
           {isTopWear ? <span className="mt-4 inline-flex rounded-full bg-accent px-4 py-2 text-xs font-black uppercase tracking-wider text-accent-foreground">Exclusive Ready-to-Wear</span> : null}
 
           {/* print type */}
@@ -322,6 +381,34 @@ function ProductDetail() {
               <p className="mt-1 text-xs text-muted-foreground">Player details are not needed for plain (no print) jerseys.</p>
             ) : null}
           </div>
+
+          {/* bulk roster upload — shown once the order exceeds 15 pieces */}
+          {!isTopWear && printType !== "No Print" && needsRows && totalQty > 15 ? (
+            <div className="panel mt-5 border-lime/40 p-4">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Big squad? Upload your team roster</p>
+                <span className="rounded-full bg-lime px-2.5 py-1 text-[10px] font-black uppercase text-lime-foreground">{totalQty} pcs</span>
+              </div>
+              <p className="mt-2 text-xs text-muted-foreground">
+                For orders above 15 pieces you can skip typing names and numbers — upload your roster (Excel, CSV or PDF) and our team prints straight from it.
+              </p>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <label className="inline-flex h-11 cursor-pointer items-center gap-2 rounded-full bg-heat px-5 text-sm font-extrabold uppercase text-primary-foreground">
+                  <FileUp className="h-4 w-4" /> Upload roster
+                  <input type="file" accept=".csv,.xlsx,.xls,.pdf" className="sr-only" onChange={onRoster} />
+                </label>
+                <Button variant="outline" className="gap-2" onClick={downloadRosterTemplate}>
+                  <FileDown className="h-4 w-4 text-lime" /> Sample CSV
+                </Button>
+                {rosterName ? (
+                  <span className="inline-flex items-center gap-2 rounded-full border border-lime/50 bg-lime/10 px-3 py-2 text-xs font-bold text-lime">
+                    <span className="max-w-40 truncate">{rosterName}</span>
+                    <button onClick={() => setRosterName(undefined)} aria-label="Remove roster file" className="hover:text-foreground"><X className="h-3.5 w-3.5" /></button>
+                  </span>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
 
           {/* note */}
           <div className="mt-5">

@@ -25,9 +25,11 @@ export const Route = createFileRoute("/profile/address")({
   ),
 });
 
-const blank = { name: "", phone: "", pincode: "", house: "", city: "", state: "", isDefault: false };
+const blank = { name: "", phone: "", pincode: "", house: "", city: "", state: "", isDefault: false, needGstInvoice: false, company: "", gstin: "" };
 type Form = typeof blank;
 type Errs = Partial<Record<keyof Form, string>>;
+
+const GSTIN_RE = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][0-9A-Z]{3}$/;
 
 export function AddressForm({
   initial,
@@ -38,7 +40,7 @@ export function AddressForm({
   onSave: (a: Omit<Address, "id">, id?: string) => void;
   onCancel?: () => void;
 }) {
-  const [form, setForm] = useState<Form>(initial ? { ...initial } : blank);
+  const [form, setForm] = useState<Form>(initial ? { ...initial, needGstInvoice: !!initial.needGstInvoice, company: initial.company ?? "", gstin: initial.gstin ?? "" } : blank);
   const [errors, setErrors] = useState<Errs>({});
 
   const submit = (e: React.FormEvent) => {
@@ -50,9 +52,11 @@ export function AddressForm({
     if (form.house.trim().length < 5) err.house = "House / street is too short.";
     if (!form.city.trim()) err.city = "City is required.";
     if (!form.state.trim()) err.state = "State is required.";
+    if (form.needGstInvoice && form.gstin.trim() && !GSTIN_RE.test(form.gstin.trim().toUpperCase()))
+      err.gstin = "Enter a valid 15-character GSTIN (e.g. 33ABCDE1234F1Z5).";
     setErrors(err);
     if (Object.keys(err).length) return;
-    onSave(form, initial?.id);
+    onSave({ ...form, gstin: form.gstin.trim().toUpperCase() || undefined }, initial?.id);
     if (!initial) setForm(blank);
   };
 
@@ -76,6 +80,27 @@ export function AddressForm({
           className="h-4 w-4 accent-[var(--color-primary)]" />
         Set as default address
       </label>
+
+      <fieldset className="rounded-xl border border-border bg-surface/50 p-4">
+        <legend className="px-1 text-xs font-bold uppercase tracking-wider text-muted-foreground">For business & club buyers</legend>
+        <label className="flex items-center gap-2 text-sm font-semibold">
+          <input type="checkbox" checked={form.needGstInvoice} onChange={(e) => setForm({ ...form, needGstInvoice: e.target.checked })}
+            className="h-4 w-4 accent-[var(--color-lime)]" />
+          Need GST Invoice for Company / Club?
+        </label>
+        {form.needGstInvoice ? (
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <Input label="Company / Club Name" value={form.company} onChange={set("company")}
+              placeholder="Tirupur Strikers Club" error={errors.company} />
+            <Input label="GST Number (GSTIN)" value={form.gstin} onChange={set("gstin")}
+              placeholder="33ABCDE1234F1Z5" error={errors.gstin} />
+            <p className="text-xs text-muted-foreground sm:col-span-2">
+              Optional — your company or club name and GSTIN will appear on a B2B tax invoice.
+            </p>
+          </div>
+        ) : null}
+      </fieldset>
+
       <div className="flex gap-2 pt-1">
         <Button type="submit">{initial ? "Update address" : "Save address"}</Button>
         {onCancel ? <Button type="button" variant="ghost" onClick={onCancel}>Cancel</Button> : null}

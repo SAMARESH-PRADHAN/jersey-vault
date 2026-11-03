@@ -1,3 +1,11 @@
+# Custom Premium + bulk buying + payments updates
+- [x] Rebrand Premium Collection → Custom Premium Collection with 4 customizable products (p31–p34); move it inside the Custom Team Jersey navbar dropdown (desktop + mobile) and add it to shop category filters.
+- [x] Bulk roster upload for orders above 15 pieces (CSV parsed into player rows; Excel/PDF attached) with sample CSV template; roster persists in cart and order/invoice.
+- [x] Optional GST invoice fields (Company/Club + GSTIN) in the address form; jsPDF invoices render a B2B tax invoice when both are present.
+- [x] 50% advance payment option for customizable carts (readymade-only carts pay full); "Pay Remaining 50%" action in My Orders marks the balance settled.
+- [x] MOQ badges on product cards and details (MOQ 5 pcs custom · MOQ 1 pc Max 3 readymade).
+- [x] Share widget on product details: WhatsApp, Copy Link with toast, native share fallback.
+
 # Winter Top Wear + announcement ticker
 - [x] Rename navbar "Jersey Fit Top Wear" to "Top Wear"; add "Winter Top Wear" link (desktop dropdown + mobile accordion) before Premium Collection.
 - [x] Announcement ticker marquee above the navbar on every page.
