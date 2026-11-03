@@ -169,14 +169,14 @@ function ProductDetail() {
     if (totalQty === 0) errs.push("Select at least one size and quantity.");
     if (isTopWear && totalQty > 3) errs.push("Exclusive Top Wear is limited to 3 pieces per order.");
     if (!isTopWear && cats.includes("Logo") && !logo) errs.push("Upload a logo image or uncheck Logo.");
-    if (!isTopWear && needsRows) {
+    if (!isTopWear && needsRows && !rosterName) {
       const missing = rowKeys.some(({ key }) => {
         const r = rows[key];
         if (cats.includes("Name") && !r?.name?.trim()) return true;
         if (cats.includes("Number") && !r?.number?.trim()) return true;
         return false;
       });
-      if (missing) errs.push("Fill in the name and number for every unit.");
+      if (missing) errs.push("Fill in the name and number for every unit, or upload a team roster instead.");
     }
     setErrors(errs);
     if (errs.length) {
@@ -207,6 +207,7 @@ function ProductDetail() {
       printType: isTopWear ? "No Print" : printType,
       printCategories: isTopWear ? [] : cats,
       ...(!isTopWear && logo ? { logo } : {}),
+      ...(rosterName ? { rosterName } : {}),
       sizes: SIZES.filter((s) => (qty[s] ?? 0) > 0).map((s) => ({ size: s, qty: qty[s] ?? 0 })),
       rows: personRows,
       note,
@@ -257,6 +258,8 @@ function ProductDetail() {
           </div>
           <p className="mt-4 text-sm text-muted-foreground">{product.description}</p>
           <p className="mt-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">Material: <span className="text-foreground">{product.material}</span></p>
+          <p className="mt-1 text-xs font-bold uppercase tracking-wider text-muted-foreground">MOQ: <span className="text-lime">{isTopWear ? "1 pc (Max: 3 pcs)" : "5 pcs"}</span> · per piece</p>
+          <ShareWidget name={product.name} code={product.code} />
           {isTopWear ? <span className="mt-4 inline-flex rounded-full bg-accent px-4 py-2 text-xs font-black uppercase tracking-wider text-accent-foreground">Exclusive Ready-to-Wear</span> : null}
 
           {/* print type */}
@@ -378,6 +381,34 @@ function ProductDetail() {
               <p className="mt-1 text-xs text-muted-foreground">Player details are not needed for plain (no print) jerseys.</p>
             ) : null}
           </div>
+
+          {/* bulk roster upload — shown once the order exceeds 15 pieces */}
+          {!isTopWear && printType !== "No Print" && needsRows && totalQty > 15 ? (
+            <div className="panel mt-5 border-lime/40 p-4">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Big squad? Upload your team roster</p>
+                <span className="rounded-full bg-lime px-2.5 py-1 text-[10px] font-black uppercase text-lime-foreground">{totalQty} pcs</span>
+              </div>
+              <p className="mt-2 text-xs text-muted-foreground">
+                For orders above 15 pieces you can skip typing names and numbers — upload your roster (Excel, CSV or PDF) and our team prints straight from it.
+              </p>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <label className="inline-flex h-11 cursor-pointer items-center gap-2 rounded-full bg-heat px-5 text-sm font-extrabold uppercase text-primary-foreground">
+                  <FileUp className="h-4 w-4" /> Upload roster
+                  <input type="file" accept=".csv,.xlsx,.xls,.pdf" className="sr-only" onChange={onRoster} />
+                </label>
+                <Button variant="outline" className="gap-2" onClick={downloadRosterTemplate}>
+                  <FileDown className="h-4 w-4 text-lime" /> Sample CSV
+                </Button>
+                {rosterName ? (
+                  <span className="inline-flex items-center gap-2 rounded-full border border-lime/50 bg-lime/10 px-3 py-2 text-xs font-bold text-lime">
+                    <span className="max-w-40 truncate">{rosterName}</span>
+                    <button onClick={() => setRosterName(undefined)} aria-label="Remove roster file" className="hover:text-foreground"><X className="h-3.5 w-3.5" /></button>
+                  </span>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
 
           {/* note */}
           <div className="mt-5">
