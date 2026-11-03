@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Download, FastForward, Package, Star } from "lucide-react";
+import { Download, FastForward, Package, Star, Wallet } from "lucide-react";
 import { Button, Card, Modal, Stars } from "@/components/ui/kit";
 import { RequireAuth } from "@/components/RequireAuth";
 import { useApp } from "@/store/app";
@@ -47,7 +47,7 @@ function Timeline({ index }: { index: number }) {
 }
 
 function Orders() {
-  const { orders, advanceOrder, addReview, user } = useApp();
+  const { orders, advanceOrder, payBalance, addReview, user } = useApp();
   const [review, setReview] = useState<{ order: Order; productId: string; name: string } | null>(null);
   const [rating, setRating] = useState(5);
   const [text, setText] = useState("");
@@ -88,7 +88,7 @@ function Orders() {
                   <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Order ID</p>
                   <p className="truncate text-lg font-extrabold">{o.id}</p>
                   <p className="text-xs text-muted-foreground">
-                    {new Date(o.date).toLocaleString("en-IN")} · {o.payment}
+                    {new Date(o.date).toLocaleString("en-IN")} · {o.payment}{o.payMode === "advance" ? " · 50% Advance" : ""}
                   </p>
                 </div>
                 <div className="text-right">
@@ -128,6 +128,15 @@ function Orders() {
                 <Button size="sm" variant="outline" onClick={() => downloadInvoice(o)}>
                   <Download className="h-3.5 w-3.5" /> Download Invoice
                 </Button>
+                {o.payMode === "advance" ? (
+                  !o.balancePaid ? (
+                    <Button size="sm" variant="lime" onClick={() => payBalance(o.id)}>
+                      <Wallet className="h-3.5 w-3.5" /> Pay Remaining 50% ({inr(o.total - (o.amountPaid ?? 0))})
+                    </Button>
+                  ) : (
+                    <span className="rounded-full border border-lime/50 bg-lime/10 px-3 py-1.5 text-[10px] font-black uppercase text-lime">Balance paid · Fully settled</span>
+                  )
+                ) : null}
                 {o.statusIndex < 4 ? (
                   <Button size="sm" variant="ghost" onClick={() => advanceOrder(o.id)}>
                     <FastForward className="h-3.5 w-3.5" /> Advance status (demo)
@@ -135,6 +144,7 @@ function Orders() {
                 ) : null}
                 <span className="ml-auto text-xs text-muted-foreground">
                   Subtotal {inr(o.subtotal)} · GST {inr(o.gst)}{o.discount ? ` · Saved ${inr(o.discount)}` : ""}
+                  {o.payMode === "advance" ? ` · Paid ${inr(o.balancePaid ? o.total : o.amountPaid ?? 0)}` : ""}
                 </span>
               </div>
             </Card>
