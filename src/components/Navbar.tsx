@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronDown, LogOut, MapPin, Menu, Package, ShoppingCart, User as UserIcon, X } from "lucide-react";
+import { ChevronDown, LogOut, MapPin, Menu, Package, ShoppingCart, Sparkles, User as UserIcon, X } from "lucide-react";
 import { Button } from "@/components/ui/kit";
 import { CATEGORIES, TOP_WEAR_SUBCATEGORIES, WINTER_SUBCATEGORIES } from "@/data/products";
 import { useApp } from "@/store/app";
@@ -81,16 +81,13 @@ export function Navbar() {
                       className="block rounded-xl px-3 py-2.5 text-sm font-semibold hover:bg-surface-2">
                       {c.label}
                     </Link>
-                  ))}
-                  <Link to="/premium-collection" onClick={() => setCatOpen(false)}
-                    className="col-span-2 mt-1 flex items-center justify-between rounded-xl border border-lime/40 bg-lime/10 px-3 py-2.5 text-sm font-bold text-lime hover:bg-lime/20">
-                    Custom Premium Collection
-                    <span aria-hidden="true">→</span>
-                  </Link>
                 </motion.div>
               ) : null}
             </AnimatePresence>
           </div>
+          <Link to="/premium-collection" className={cn(navLink, "flex items-center gap-1.5")}>
+            <Sparkles className="h-3.5 w-3.5 text-lime" />Custom Premium Collection
+          </Link>
           <div className="relative">
             <Button variant="ghost" className={cn(navLink, "h-auto rounded-none p-0 hover:bg-transparent")} onClick={() => setTopWearOpen((v) => !v)} aria-expanded={topWearOpen}>
               Top Wear <ChevronDown className="h-4 w-4" />
@@ -201,13 +198,12 @@ export function Navbar() {
                           {c.label}
                         </Link>
                       ))}
-                      <Link onClick={() => setDrawer(false)} to="/premium-collection"
-                        className="mx-3 my-1 block rounded-xl border border-lime/40 bg-lime/10 px-3 py-2.5 text-sm font-bold text-lime">
-                        Custom Premium Collection
-                      </Link>
                     </motion.div>
                   ) : null}
                 </AnimatePresence>
+                <Link onClick={() => setDrawer(false)} to="/premium-collection" className="flex items-center gap-1.5 rounded-xl px-3 py-3 font-bold uppercase hover:bg-surface-2">
+                  <Sparkles className="h-4 w-4 text-lime" />Custom Premium Collection
+                </Link>
                 <Button variant="ghost" onClick={() => setTopWearAccordion((v) => !v)} aria-expanded={topWearAccordion} className="h-auto min-h-12 w-full justify-between rounded-xl px-3 py-3 text-left font-bold uppercase text-foreground">
                   <span className="min-w-0">Top Wear</span><ChevronDown className={cn("h-4 w-4 shrink-0", topWearAccordion && "rotate-180")} />
                 </Button>

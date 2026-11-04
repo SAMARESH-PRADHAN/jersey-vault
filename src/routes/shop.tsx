@@ -3,8 +3,9 @@ import { useEffect, useMemo, useState } from "react";
 import { Check, SlidersHorizontal } from "lucide-react";
 import { Button, Card, ProductSkeleton } from "@/components/ui/kit";
 import { ProductCard } from "@/components/ProductCard";
-import { PRODUCTS, SHOP_CATEGORIES, TOP_WEAR_SUBCATEGORIES, getCategory } from "@/data/products";
+import { PRODUCTS, SHOP_CATEGORIES, SHOP_FILTER_CATEGORIES, TOP_WEAR_SUBCATEGORIES, getCategory } from "@/data/products";
 import { MobileFilterSheet, type ShopFilters } from "@/components/MobileFilterSheet";
+import { CategoryFilterList } from "@/components/CategoryFilterList";
 import type { CategorySlug, TopWearSubCategory } from "@/types";
 import { inr } from "@/lib/storage";
 import hero from "@/assets/hero-1.jpg";
@@ -34,7 +35,7 @@ export const Route = createFileRoute("/shop")({
 
 const PAGE = 8;
 const MAXP = 2000;
-const MATERIALS = Array.from(new Set(PRODUCTS.filter((product) => product.category !== "winter-top-wear").map((product) => product.material))).sort();
+const MATERIALS = Array.from(new Set(PRODUCTS.filter((product) => product.category !== "winter-top-wear" && product.category !== "top-wear").map((product) => product.material))).sort();
 
 function Shop() {
   const category = Route.useSearch().category ?? "all";
@@ -56,7 +57,7 @@ function Shop() {
   }, [category, subCategory, sort, range[0], range[1], materials]);
 
   const list = useMemo(() => {
-    let l = PRODUCTS.filter((p) => (category === "all" ? p.category !== "winter-top-wear" : p.category === category));
+    let l = PRODUCTS.filter((p) => (category === "all" ? p.category !== "winter-top-wear" && p.category !== "top-wear" : p.category === category));
     if (category === "top-wear" && subCategory !== "all") l = l.filter((p) => p.subCategory === subCategory);
     l = l.filter((p) => p.price >= range[0] && p.price <= range[1]);
     if (materials.length) l = l.filter((p) => materials.includes(p.material));
@@ -104,10 +105,6 @@ function Shop() {
         </div>
       </section>
 
-      {category === "top-wear" ? <div className="shell flex flex-wrap gap-2 py-4">
-        {TOP_WEAR_SUBCATEGORIES.map((sub) => <Button key={sub.slug} variant={subCategory === sub.slug ? "lime" : "outline"} aria-pressed={subCategory === sub.slug} className="px-3 text-xs"
-          onClick={() => navigate({ to: ".", search: { category: "top-wear", subCategory: sub.slug === "all" ? undefined : sub.slug } })}>{sub.label}</Button>)}
-      </div> : null}
       <div className="sticky top-16 z-30 border-b border-border bg-background/95 backdrop-blur-xl md:top-18 lg:hidden">
         <div className="shell grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 py-3">
           <p className="min-w-0 text-xs font-bold text-muted-foreground" aria-live="polite">Showing {list.length} Jerseys</p>
@@ -125,16 +122,25 @@ function Shop() {
         <Card className="h-fit lg:sticky lg:top-24">
           <h3 className="flex items-center gap-2 text-base"><SlidersHorizontal className="h-4 w-4 text-lime" /> Filters</h3>
 
-          <div className="mt-5">
-            <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Category</p>
-            <div className="mt-3 max-h-72 space-y-1 overflow-y-auto pr-1">
-              {[{ slug: "all" as const, label: "All Jerseys" }, ...SHOP_CATEGORIES].map((item) => (
-                <button key={item.slug} onClick={() => setCategory(item.slug)} aria-pressed={category === item.slug} className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-xs font-bold ${category === item.slug ? "bg-primary/15 text-lime" : "text-muted-foreground hover:bg-surface-2 hover:text-foreground"}`}>
-                  {item.label}{category === item.slug ? <Check className="h-3.5 w-3.5" /> : null}
-                </button>
-              ))}
+          {category !== "top-wear" ? (
+            <div className="mt-5">
+              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Category</p>
+              <CategoryFilterList className="mt-3 max-h-72 space-y-1 overflow-y-auto pr-1"
+                categories={[{ slug: "all" as const, label: "All Jerseys" }, ...SHOP_FILTER_CATEGORIES]}
+                active={category} onSelect={setCategory} />
             </div>
-          </div>
+          ) : (
+            <div className="mt-5">
+              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Neck style</p>
+              <div className="mt-3 space-y-1">
+                {TOP_WEAR_SUBCATEGORIES.map((sub) => (
+                  <button key={sub.slug} onClick={() => navigate({ to: ".", search: { category: "top-wear", subCategory: sub.slug === "all" ? undefined : sub.slug } })} aria-pressed={subCategory === sub.slug} className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-xs font-bold ${subCategory === sub.slug ? "bg-primary/15 text-lime" : "text-muted-foreground hover:bg-surface-2 hover:text-foreground"}`}>
+                    {sub.label}{subCategory === sub.slug ? <Check className="h-3.5 w-3.5" /> : null}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="mt-5">
             <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Price range</p>
@@ -153,17 +159,19 @@ function Shop() {
             <p className="mt-2 text-xs text-muted-foreground">{inr(range[0])} — {inr(range[1])}</p>
           </div>
 
-          <fieldset className="mt-6">
-            <legend className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Material</legend>
-            <div className="mt-3 max-h-64 space-y-2 overflow-y-auto pr-1">
-              {MATERIALS.map((material) => (
-                <label key={material} className="flex cursor-pointer items-start gap-2 text-xs text-muted-foreground hover:text-foreground">
-                  <input type="checkbox" checked={materials.includes(material)} onChange={() => toggleMaterial(material)} className="mt-0.5 accent-[var(--color-lime)]" />
-                  <span>{material}</span>
-                </label>
-              ))}
-            </div>
-          </fieldset>
+          {category !== "top-wear" ? (
+            <fieldset className="mt-6">
+              <legend className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Material</legend>
+              <div className="mt-3 max-h-64 space-y-2 overflow-y-auto pr-1">
+                {MATERIALS.map((material) => (
+                  <label key={material} className="flex cursor-pointer items-start gap-2 text-xs text-muted-foreground hover:text-foreground">
+                    <input type="checkbox" checked={materials.includes(material)} onChange={() => toggleMaterial(material)} className="mt-0.5 accent-[var(--color-lime)]" />
+                    <span>{material}</span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+          ) : null}
 
           <div className="mt-6">
             <label htmlFor="sort" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Sort by</label>
