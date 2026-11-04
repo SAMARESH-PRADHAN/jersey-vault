@@ -81,16 +81,13 @@ export function Navbar() {
                       className="block rounded-xl px-3 py-2.5 text-sm font-semibold hover:bg-surface-2">
                       {c.label}
                     </Link>
-                  ))}
-                  <Link to="/premium-collection" onClick={() => setCatOpen(false)}
-                    className="col-span-2 mt-1 flex items-center justify-between rounded-xl border border-lime/40 bg-lime/10 px-3 py-2.5 text-sm font-bold text-lime hover:bg-lime/20">
-                    Custom Premium Collection
-                    <span aria-hidden="true">→</span>
-                  </Link>
                 </motion.div>
               ) : null}
             </AnimatePresence>
           </div>
+          <Link to="/premium-collection" className={cn(navLink, "flex items-center gap-1.5")}>
+            <Sparkles className="h-3.5 w-3.5 text-lime" />Custom Premium Collection
+          </Link>
           <div className="relative">
             <Button variant="ghost" className={cn(navLink, "h-auto rounded-none p-0 hover:bg-transparent")} onClick={() => setTopWearOpen((v) => !v)} aria-expanded={topWearOpen}>
               Top Wear <ChevronDown className="h-4 w-4" />
