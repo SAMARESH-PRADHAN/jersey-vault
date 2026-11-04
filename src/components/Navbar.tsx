@@ -81,6 +81,7 @@ export function Navbar() {
                       className="block rounded-xl px-3 py-2.5 text-sm font-semibold hover:bg-surface-2">
                       {c.label}
                     </Link>
+                  ))}
                 </motion.div>
               ) : null}
             </AnimatePresence>
