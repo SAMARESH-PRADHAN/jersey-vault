@@ -3,8 +3,9 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { motion, useReducedMotion } from "framer-motion";
 import { Check, X } from "lucide-react";
 import { Button } from "@/components/ui/kit";
-import { PRODUCTS, SHOP_CATEGORIES, TOP_WEAR_SUBCATEGORIES } from "@/data/products";
+import { PRODUCTS, SHOP_FILTER_CATEGORIES, TOP_WEAR_SUBCATEGORIES } from "@/data/products";
 import { inr } from "@/lib/storage";
+import { cn } from "@/lib/utils";
 import type { CategorySlug, TopWearSubCategory } from "@/types";
 
 export type ShopSort = "featured" | "low" | "high" | "rating";
@@ -16,9 +17,9 @@ export interface ShopFilters {
   sort: ShopSort;
 }
 export const MAX_PRICE = 2000;
-export const SHOP_MATERIALS = Array.from(new Set(PRODUCTS.filter((p) => p.category !== "winter-top-wear").map((p) => p.material))).sort();
+export const SHOP_MATERIALS = Array.from(new Set(PRODUCTS.filter((p) => p.category !== "winter-top-wear" && p.category !== "top-wear").map((p) => p.material))).sort();
 export const matchingProducts = (filters: ShopFilters) => PRODUCTS.filter((p) =>
-  (filters.category === "all" ? p.category !== "winter-top-wear" : p.category === filters.category) &&
+  (filters.category === "all" ? p.category !== "winter-top-wear" && p.category !== "top-wear" : p.category === filters.category) &&
   (filters.category !== "top-wear" || filters.subCategory === "all" || p.subCategory === filters.subCategory) &&
   p.price >= filters.range[0] && p.price <= filters.range[1] &&
   (!filters.materials.length || filters.materials.includes(p.material))
@@ -80,14 +81,14 @@ export function MobileFilterSheet({ initial, onClose, onApply }: {
                   onChange={(e) => update({ range: [draft.range[0], Number(e.target.value)] })} className="mt-3 h-8 w-full accent-[var(--color-primary)]" />
                 <p className="text-xs text-muted-foreground">{inr(draft.range[0])} — {inr(draft.range[1])}</p>
               </fieldset>
-              <fieldset>
+              {draft.category !== "top-wear" ? <fieldset>
                 <legend className="mb-2 text-xs font-bold uppercase text-muted-foreground">Material</legend>
                 {SHOP_MATERIALS.map((material) => <label key={material} className="flex min-h-11 cursor-pointer items-center gap-3 border-b border-border/50 py-2 text-sm">
                   <input type="checkbox" className="h-5 w-5 shrink-0 accent-[var(--color-lime)]" checked={draft.materials.includes(material)}
                     onChange={() => update({ materials: draft.materials.includes(material) ? draft.materials.filter((m) => m !== material) : [...draft.materials, material] })} />
                   <span className="min-w-0">{material}</span>
                 </label>)}
-              </fieldset>
+              </fieldset> : null}
               <div>
                 <label htmlFor="mobile-sort" className="text-xs font-bold uppercase text-muted-foreground">Sort by</label>
                 <select id="mobile-sort" value={draft.sort} onChange={(e) => update({ sort: e.target.value as ShopSort })}
