@@ -34,6 +34,9 @@ export const CUSTOM_PREMIUM_CATEGORY = {
 
 export const SHOP_CATEGORIES = [...CATEGORIES, TOP_WEAR_CATEGORY, CUSTOM_PREMIUM_CATEGORY];
 
+/** Categories offered inside the Custom Team Jersey filter — Top Wear sells on its own page. */
+export const SHOP_FILTER_CATEGORIES = SHOP_CATEGORIES.filter((category) => category.slug !== "top-wear");
+
 export const TOP_WEAR_SUBCATEGORIES: { slug: TopWearSubCategory; label: string }[] = [
   { slug: "all", label: "All Top Wear" },
   { slug: "round-neck", label: "Round Neck T-Shirts" },
