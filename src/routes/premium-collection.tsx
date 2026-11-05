@@ -1,17 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import * as Dialog from "@radix-ui/react-dialog";
-import { motion, useReducedMotion } from "framer-motion";
-import { SlidersHorizontal, Sparkles, X } from "lucide-react";
+import { SlidersHorizontal, Sparkles } from "lucide-react";
 import { Button, Card, ProductSkeleton } from "@/components/ui/kit";
 import { ProductCard } from "@/components/ProductCard";
-import { PRODUCTS } from "@/data/products";
+import { CategoryFilterList } from "@/components/CategoryFilterList";
+import { MobileFilterSheet, type ShopFilters } from "@/components/MobileFilterSheet";
+import { PRODUCTS, SHOP_FILTER_CATEGORIES, SHOP_MATERIALS } from "@/data/products";
 import { inr } from "@/lib/storage";
 import hero from "@/assets/hero-1.jpg";
 
 type Sort = "featured" | "low" | "high" | "rating";
 
-const MAXP = 2500;
+const MAXP = 2000;
 const PREMIUM = PRODUCTS.filter((p) => p.category === "custom-premium");
 
 export const Route = createFileRoute("/premium-collection")({
@@ -30,9 +30,11 @@ export const Route = createFileRoute("/premium-collection")({
 });
 
 function PremiumCollection() {
+  const navigate = Route.useNavigate();
   const [filterOpen, setFilterOpen] = useState(false);
   const [range, setRange] = useState<[number, number]>([0, MAXP]);
   const [sort, setSort] = useState<Sort>("featured");
+  const [materials, setMaterials] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Simulated fetch — swap for GET /api/products?collection=custom-premium later.
@@ -40,20 +42,35 @@ function PremiumCollection() {
     setLoading(true);
     const t = setTimeout(() => setLoading(false), 450);
     return () => clearTimeout(t);
-  }, [sort, range[0], range[1]]);
+  }, [sort, range[0], range[1], materials]);
 
   const list = useMemo(() => {
     let l = PREMIUM.filter((p) => p.price >= range[0] && p.price <= range[1]);
+    if (materials.length) l = l.filter((p) => materials.includes(p.material));
     if (sort === "low") l = [...l].sort((a, b) => a.price - b.price);
     if (sort === "high") l = [...l].sort((a, b) => b.price - a.price);
     if (sort === "rating") l = [...l].sort((a, b) => b.rating - a.rating);
     return l;
-  }, [range, sort]);
+  }, [range, sort, materials]);
 
-  const activeCount = (range[0] !== 0 || range[1] !== MAXP ? 1 : 0) + (sort !== "featured" ? 1 : 0);
+  const toggleMaterial = (material: string) =>
+    setMaterials((selected) => selected.includes(material) ? selected.filter((item) => item !== material) : [...selected, material]);
+
+  const activeCount = (range[0] !== 0 || range[1] !== MAXP ? 1 : 0) + materials.length + (sort !== "featured" ? 1 : 0);
   const resetFilters = () => {
     setRange([0, MAXP]);
     setSort("featured");
+    setMaterials([]);
+  };
+
+  const goToCategory = (slug: Exclude<ShopFilters["category"], "custom-premium">) =>
+    navigate({ to: "/shop", search: { category: slug } });
+
+  const filters: ShopFilters = { category: "custom-premium", subCategory: "all", range, sort, materials };
+  const applyFilters = (next: ShopFilters) => {
+    setRange(next.range); setSort(next.sort); setMaterials(next.materials);
+    if (next.category !== "custom-premium") goToCategory(next.category);
+    setFilterOpen(false);
   };
 
   return (
@@ -84,17 +101,21 @@ function PremiumCollection() {
           </Button>
         </div>
       </div>
-      {filterOpen ? (
-        PremiumFilterSheet({ range, sort, onClose: () => setFilterOpen(false),
-          onApply: (nextRange, nextSort) => { setRange(nextRange); setSort(nextSort); setFilterOpen(false); } })
-      ) : null}
+      {filterOpen ? <MobileFilterSheet initial={filters} onClose={() => setFilterOpen(false)} onApply={applyFilters} /> : null}
 
       <div className="shell py-6 lg:py-12">
         <div className="grid gap-6 lg:grid-cols-[260px_1fr]">
-          {/* filters — price + sort */}
+          {/* filters — category, price, material, sort */}
           <div className="hidden lg:block">
             <Card className="h-fit lg:sticky lg:top-24">
               <h3 className="flex items-center gap-2 text-base"><SlidersHorizontal className="h-4 w-4 text-lime" /> Filters</h3>
+              <div className="mt-5">
+                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Category</p>
+                <CategoryFilterList className="mt-3 max-h-72 space-y-1 overflow-y-auto pr-1"
+                  categories={[{ slug: "all" as const, label: "All Jerseys" }, ...SHOP_FILTER_CATEGORIES]}
+                  active="custom-premium"
+                  onSelect={(slug) => { if (slug !== "custom-premium") goToCategory(slug); }} />
+              </div>
               <div className="mt-5">
                 <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Price range</p>
                 <div className="mt-3 flex items-center gap-2">
@@ -111,6 +132,17 @@ function PremiumCollection() {
                   className="mt-4 w-full accent-[var(--color-primary)]" />
                 <p className="mt-2 text-xs text-muted-foreground">{inr(range[0])} — {inr(range[1])}</p>
               </div>
+              <fieldset className="mt-6">
+                <legend className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Material</legend>
+                <div className="mt-3 max-h-64 space-y-2 overflow-y-auto pr-1">
+                  {SHOP_MATERIALS.map((material) => (
+                    <label key={material} className="flex cursor-pointer items-start gap-2 text-xs text-muted-foreground hover:text-foreground">
+                      <input type="checkbox" checked={materials.includes(material)} onChange={() => toggleMaterial(material)} className="mt-0.5 accent-[var(--color-lime)]" />
+                      <span>{material}</span>
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
               <div className="mt-6">
                 <label htmlFor="premium-sort" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Sort by</label>
                 <select id="premium-sort" value={sort} onChange={(e) => setSort(e.target.value as Sort)}
@@ -137,7 +169,7 @@ function PremiumCollection() {
             ) : list.length === 0 ? (
               <Card className="py-16 text-center">
                 <h3 className="text-xl">No products match those filters</h3>
-                <p className="mt-2 text-sm text-muted-foreground">Try widening the price range.</p>
+                <p className="mt-2 text-sm text-muted-foreground">Try widening the price range or clearing materials.</p>
                 <Button className="mt-5" onClick={resetFilters}>Clear filters</Button>
               </Card>
             ) : (
@@ -154,68 +186,5 @@ function PremiumCollection() {
         </div>
       </div>
     </div>
-  );
-}
-
-function PremiumFilterSheet({ range, sort, onClose, onApply }: {
-  range: [number, number];
-  sort: Sort;
-  onClose: () => void;
-  onApply: (range: [number, number], sort: Sort) => void;
-}) {
-  const [draftRange, setDraftRange] = useState<[number, number]>(range);
-  const [draftSort, setDraftSort] = useState<Sort>(sort);
-  const reducedMotion = useReducedMotion();
-  const count = PREMIUM.filter((p) => p.price >= draftRange[0] && p.price <= draftRange[1]).length;
-  return (
-    <Dialog.Root open onOpenChange={(open) => { if (!open) onClose(); }}>
-      <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-[110] bg-background/80 backdrop-blur-sm lg:hidden" />
-        <Dialog.Content asChild aria-describedby={undefined}>
-          <motion.div initial={{ y: reducedMotion ? 0 : "100%" }} animate={{ y: 0 }} transition={{ type: "spring", stiffness: 320, damping: 32 }}
-            className="fixed inset-x-0 bottom-0 z-[111] flex max-h-[90dvh] flex-col rounded-t-2xl border border-border bg-surface outline-none lg:hidden">
-            <div className="mx-auto mt-3 h-1 w-12 shrink-0 rounded-full bg-muted-foreground/50" />
-            <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-border px-5 py-3">
-              <Dialog.Title className="text-2xl">Filter & Sort</Dialog.Title>
-              <Button variant="ghost" size="icon" onClick={onClose} aria-label="Close filters"><X className="h-5 w-5" /></Button>
-            </div>
-            <div className="min-h-0 space-y-6 overflow-y-auto overscroll-contain px-5 py-5">
-              <fieldset>
-                <legend className="mb-3 text-xs font-bold uppercase text-muted-foreground">Price range</legend>
-                <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
-                  <input type="number" aria-label="Filter minimum price" min={0} max={draftRange[1]} value={draftRange[0]}
-                    onChange={(e) => setDraftRange([Math.max(0, Math.min(Number(e.target.value), draftRange[1])), draftRange[1]])}
-                    className="h-12 min-w-0 w-full rounded-lg border border-input bg-background px-3 text-base" />
-                  <span className="text-muted-foreground">–</span>
-                  <input type="number" aria-label="Filter maximum price" min={draftRange[0]} max={MAXP} value={draftRange[1]}
-                    onChange={(e) => setDraftRange([draftRange[0], Math.min(MAXP, Math.max(Number(e.target.value), draftRange[0]))])}
-                    className="h-12 min-w-0 w-full rounded-lg border border-input bg-background px-3 text-base" />
-                </div>
-                <input type="range" aria-label="Filter maximum price slider" min={draftRange[0]} max={MAXP} step={50} value={draftRange[1]}
-                  onChange={(e) => setDraftRange([draftRange[0], Number(e.target.value)])} className="mt-3 h-8 w-full accent-[var(--color-primary)]" />
-                <p className="text-xs text-muted-foreground">{inr(draftRange[0])} — {inr(draftRange[1])}</p>
-              </fieldset>
-              <div>
-                <label htmlFor="premium-mobile-sort" className="text-xs font-bold uppercase text-muted-foreground">Sort by</label>
-                <select id="premium-mobile-sort" value={draftSort} onChange={(e) => setDraftSort(e.target.value as Sort)}
-                  className="mt-2 h-12 w-full rounded-lg border border-input bg-background px-3 text-base">
-                  <option value="featured">Featured</option>
-                  <option value="low">Price: low to high</option>
-                  <option value="high">Price: high to low</option>
-                  <option value="rating">Top rated</option>
-                </select>
-              </div>
-              <p className="rounded-xl border border-lime/40 bg-lime/10 p-3 text-xs font-bold text-lime">
-                <Sparkles className="mr-1.5 inline h-3.5 w-3.5" />Fully customisable · MOQ: 5 pcs
-              </p>
-            </div>
-            <div className="grid shrink-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-3 border-t border-border bg-surface px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
-              <Button variant="ghost" className="px-2 text-xs" onClick={() => { setDraftRange([0, MAXP]); setDraftSort("featured"); }}>Reset All</Button>
-              <Button variant="lime" onClick={() => onApply(draftRange, draftSort)} className="px-3 text-xs">Apply & Show {count} Items</Button>
-            </div>
-          </motion.div>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
   );
 }

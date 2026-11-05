@@ -1,11 +1,11 @@
 import { useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { motion, useReducedMotion } from "framer-motion";
-import { Check, X } from "lucide-react";
+import { X } from "lucide-react";
 import { Button } from "@/components/ui/kit";
-import { PRODUCTS, SHOP_FILTER_CATEGORIES, TOP_WEAR_SUBCATEGORIES } from "@/data/products";
+import { CategoryFilterList } from "@/components/CategoryFilterList";
+import { PRODUCTS, SHOP_FILTER_CATEGORIES, SHOP_MATERIALS } from "@/data/products";
 import { inr } from "@/lib/storage";
-import { cn } from "@/lib/utils";
 import type { CategorySlug, TopWearSubCategory } from "@/types";
 
 export type ShopSort = "featured" | "low" | "high" | "rating";
@@ -17,7 +17,6 @@ export interface ShopFilters {
   sort: ShopSort;
 }
 export const MAX_PRICE = 2000;
-export const SHOP_MATERIALS = Array.from(new Set(PRODUCTS.filter((p) => p.category !== "winter-top-wear" && p.category !== "top-wear").map((p) => p.material))).sort();
 export const matchingProducts = (filters: ShopFilters) => PRODUCTS.filter((p) =>
   (filters.category === "all" ? p.category !== "winter-top-wear" && p.category !== "top-wear" : p.category === filters.category) &&
   (filters.category !== "top-wear" || filters.subCategory === "all" || p.subCategory === filters.subCategory) &&
@@ -25,6 +24,7 @@ export const matchingProducts = (filters: ShopFilters) => PRODUCTS.filter((p) =>
   (!filters.materials.length || filters.materials.includes(p.material))
 );
 
+/** Mobile draft sheet — changes commit only on Apply, mirroring the desktop sidebar. */
 export function MobileFilterSheet({ initial, onClose, onApply }: {
   initial: ShopFilters;
   onClose: () => void;
@@ -34,6 +34,7 @@ export function MobileFilterSheet({ initial, onClose, onApply }: {
   const reducedMotion = useReducedMotion();
   const count = matchingProducts(draft).length;
   const update = (patch: Partial<ShopFilters>) => setDraft((prev) => ({ ...prev, ...patch }));
+  const isTopWear = draft.category === "top-wear";
   return (
     <Dialog.Root open onOpenChange={(open) => { if (!open) onClose(); }}>
       <Dialog.Portal>
@@ -47,25 +48,15 @@ export function MobileFilterSheet({ initial, onClose, onApply }: {
               <Button variant="ghost" size="icon" onClick={onClose} aria-label="Close filters"><X className="h-5 w-5" /></Button>
             </div>
             <div className="min-h-0 space-y-6 overflow-y-auto overscroll-contain px-5 py-5">
-              <fieldset>
-                <legend className="mb-3 text-xs font-bold uppercase text-muted-foreground">Category</legend>
-                <div className="grid grid-cols-2 gap-2">
-                  {[{ slug: "all" as const, label: "All Jerseys" }, ...SHOP_CATEGORIES].map((c) => (
-                    <Button key={c.slug} variant={draft.category === c.slug ? "lime" : "outline"} aria-pressed={draft.category === c.slug}
-                      className="h-auto min-h-11 justify-start rounded-lg px-3 py-2 text-left text-xs"
-                      onClick={() => update({ category: c.slug, subCategory: "all" })}>
-                      <span className="min-w-0">{c.label}</span>{draft.category === c.slug ? <Check className="h-3 w-3 shrink-0" /> : null}
-                    </Button>
-                  ))}
-                </div>
-              </fieldset>
-              {draft.category === "top-wear" ? <fieldset>
-                <legend className="mb-3 text-xs font-bold uppercase text-muted-foreground">Neck style</legend>
-                <div className="flex flex-wrap gap-2">{TOP_WEAR_SUBCATEGORIES.map((sub) => (
-                  <Button key={sub.slug} variant={draft.subCategory === sub.slug ? "lime" : "outline"} aria-pressed={draft.subCategory === sub.slug}
-                    className="px-3 text-xs" onClick={() => update({ subCategory: sub.slug })}>{sub.label}</Button>
-                ))}</div>
-              </fieldset> : null}
+              {isTopWear ? null : (
+                <fieldset>
+                  <legend className="mb-3 text-xs font-bold uppercase text-muted-foreground">Category</legend>
+                  <CategoryFilterList
+                    categories={[{ slug: "all" as const, label: "All Jerseys" }, ...SHOP_FILTER_CATEGORIES]}
+                    active={draft.category}
+                    onSelect={(slug) => update({ category: slug, subCategory: "all" })} />
+                </fieldset>
+              )}
               <fieldset>
                 <legend className="mb-3 text-xs font-bold uppercase text-muted-foreground">Price range</legend>
                 <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
@@ -81,14 +72,16 @@ export function MobileFilterSheet({ initial, onClose, onApply }: {
                   onChange={(e) => update({ range: [draft.range[0], Number(e.target.value)] })} className="mt-3 h-8 w-full accent-[var(--color-primary)]" />
                 <p className="text-xs text-muted-foreground">{inr(draft.range[0])} — {inr(draft.range[1])}</p>
               </fieldset>
-              {draft.category !== "top-wear" ? <fieldset>
-                <legend className="mb-2 text-xs font-bold uppercase text-muted-foreground">Material</legend>
-                {SHOP_MATERIALS.map((material) => <label key={material} className="flex min-h-11 cursor-pointer items-center gap-3 border-b border-border/50 py-2 text-sm">
-                  <input type="checkbox" className="h-5 w-5 shrink-0 accent-[var(--color-lime)]" checked={draft.materials.includes(material)}
-                    onChange={() => update({ materials: draft.materials.includes(material) ? draft.materials.filter((m) => m !== material) : [...draft.materials, material] })} />
-                  <span className="min-w-0">{material}</span>
-                </label>)}
-              </fieldset> : null}
+              {isTopWear ? null : (
+                <fieldset>
+                  <legend className="mb-2 text-xs font-bold uppercase text-muted-foreground">Material</legend>
+                  {SHOP_MATERIALS.map((material) => <label key={material} className="flex min-h-11 cursor-pointer items-center gap-3 border-b border-border/50 py-2 text-sm">
+                    <input type="checkbox" className="h-5 w-5 shrink-0 accent-[var(--color-lime)]" checked={draft.materials.includes(material)}
+                      onChange={() => update({ materials: draft.materials.includes(material) ? draft.materials.filter((m) => m !== material) : [...draft.materials, material] })} />
+                    <span className="min-w-0">{material}</span>
+                  </label>)}
+                </fieldset>
+              )}
               <div>
                 <label htmlFor="mobile-sort" className="text-xs font-bold uppercase text-muted-foreground">Sort by</label>
                 <select id="mobile-sort" value={draft.sort} onChange={(e) => update({ sort: e.target.value as ShopSort })}

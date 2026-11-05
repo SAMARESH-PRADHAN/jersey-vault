@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Check, SlidersHorizontal } from "lucide-react";
+import { SlidersHorizontal } from "lucide-react";
 import { Button, Card, ProductSkeleton } from "@/components/ui/kit";
 import { ProductCard } from "@/components/ProductCard";
-import { PRODUCTS, SHOP_CATEGORIES, SHOP_FILTER_CATEGORIES, TOP_WEAR_SUBCATEGORIES, getCategory } from "@/data/products";
+import { PRODUCTS, SHOP_CATEGORIES, SHOP_FILTER_CATEGORIES, SHOP_MATERIALS, getCategory } from "@/data/products";
 import { MobileFilterSheet, type ShopFilters } from "@/components/MobileFilterSheet";
 import { CategoryFilterList } from "@/components/CategoryFilterList";
 import type { CategorySlug, TopWearSubCategory } from "@/types";
@@ -35,7 +35,6 @@ export const Route = createFileRoute("/shop")({
 
 const PAGE = 8;
 const MAXP = 2000;
-const MATERIALS = Array.from(new Set(PRODUCTS.filter((product) => product.category !== "winter-top-wear" && product.category !== "top-wear").map((product) => product.material))).sort();
 
 function Shop() {
   const category = Route.useSearch().category ?? "all";
@@ -129,18 +128,7 @@ function Shop() {
                 categories={[{ slug: "all" as const, label: "All Jerseys" }, ...SHOP_FILTER_CATEGORIES]}
                 active={category} onSelect={setCategory} />
             </div>
-          ) : (
-            <div className="mt-5">
-              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Neck style</p>
-              <div className="mt-3 space-y-1">
-                {TOP_WEAR_SUBCATEGORIES.map((sub) => (
-                  <button key={sub.slug} onClick={() => navigate({ to: ".", search: { category: "top-wear", subCategory: sub.slug === "all" ? undefined : sub.slug } })} aria-pressed={subCategory === sub.slug} className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-xs font-bold ${subCategory === sub.slug ? "bg-primary/15 text-lime" : "text-muted-foreground hover:bg-surface-2 hover:text-foreground"}`}>
-                    {sub.label}{subCategory === sub.slug ? <Check className="h-3.5 w-3.5" /> : null}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
+          ) : null}
 
           <div className="mt-5">
             <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Price range</p>
@@ -163,7 +151,7 @@ function Shop() {
             <fieldset className="mt-6">
               <legend className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Material</legend>
               <div className="mt-3 max-h-64 space-y-2 overflow-y-auto pr-1">
-                {MATERIALS.map((material) => (
+                {SHOP_MATERIALS.map((material) => (
                   <label key={material} className="flex cursor-pointer items-start gap-2 text-xs text-muted-foreground hover:text-foreground">
                     <input type="checkbox" checked={materials.includes(material)} onChange={() => toggleMaterial(material)} className="mt-0.5 accent-[var(--color-lime)]" />
                     <span>{material}</span>

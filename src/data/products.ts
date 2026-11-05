@@ -460,6 +460,11 @@ export const PRODUCTS: Product[] = [
 
 export const getProduct = (id: string) => PRODUCTS.find((p) => p.id === id);
 
+/** Materials available across the custom range (Top Wear & Winter Top Wear excluded). */
+export const SHOP_MATERIALS = Array.from(
+  new Set(PRODUCTS.filter((p) => p.category !== "winter-top-wear" && p.category !== "top-wear").map((p) => p.material)),
+).sort();
+
 export const WINTER_PRODUCTS = PRODUCTS.filter((p) => p.category === "winter-top-wear");
 
 export const SEED_REVIEWS = [
