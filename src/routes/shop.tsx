@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Check, SlidersHorizontal } from "lucide-react";
+import { SlidersHorizontal } from "lucide-react";
 import { Button, Card, ProductSkeleton } from "@/components/ui/kit";
 import { ProductCard } from "@/components/ProductCard";
 import { PRODUCTS, SHOP_CATEGORIES, SHOP_FILTER_CATEGORIES, SHOP_MATERIALS, getCategory } from "@/data/products";
