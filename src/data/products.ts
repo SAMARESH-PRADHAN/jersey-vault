@@ -1,4 +1,4 @@
-import type { CategorySlug, Product, TopWearSubCategory, WinterSubCategory } from "@/types";
+import type { CategorySlug, Product, TopWearSubCategory, WinterSubCategory, PrintType } from "@/types";
 import j1 from "@/assets/jersey-1.jpg";
 import j2 from "@/assets/jersey-2.jpg";
 import j3 from "@/assets/jersey-3.jpg";
@@ -458,7 +458,33 @@ export const PRODUCTS: Product[] = [
   },
 ];
 
-export const getProduct = (id: string) => PRODUCTS.find((p) => p.id === id);
+/** CUSTOM T-SHIRT DESIGN page — edit prices / MOQ here. */
+export const CUSTOM_TSHIRT_MOQ = 5;
+
+export const CUSTOM_TSHIRT_OPTIONS: { type: PrintType; price: number; mrp: number; text: string }[] = [
+  { type: "Front Printed Jersey", price: 599, mrp: 899, text: "Your design printed on the front only." },
+  { type: "Front & Back Printed Jersey", price: 749, mrp: 1099, text: "Your design on the front, plus the back print." },
+  { type: "All Over Print Jersey", price: 899, mrp: 1299, text: "Edge-to-edge sublimation of your full design." },
+];
+
+/** Standalone product (not in PRODUCTS, so it never appears in /shop). */
+export const CUSTOM_TSHIRT_PRODUCT: Product = {
+  id: "ct1",
+  code: "JF-CT-1501",
+  name: "Custom T-Shirt Design",
+  category: "custom-tshirt",
+  price: 599,
+  mrp: 899,
+  material: "180 GSM Premium Dry-Fit Polyester",
+  description: "Upload your own design and we print it on a premium dry-fit jersey. Choose front, front & back, or all over print.",
+  images: gallery(j1),
+  rating: 4.8,
+  tag: "Your Design",
+};
+
+// REPLACE the old getProduct line with this:
+export const getProduct = (id: string) =>
+  PRODUCTS.find((p) => p.id === id) ?? (id === CUSTOM_TSHIRT_PRODUCT.id ? CUSTOM_TSHIRT_PRODUCT : undefined);
 
 /** Materials available across the custom range (Top Wear & Winter Top Wear excluded). */
 export const SHOP_MATERIALS = Array.from(

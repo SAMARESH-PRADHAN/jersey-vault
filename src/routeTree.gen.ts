@@ -14,6 +14,7 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as CartRouteImport } from './routes/cart'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as ContactRouteImport } from './routes/contact'
+import { Route as CustomTshirtDesignRouteImport } from './routes/custom-tshirt-design'
 import { Route as CustomersRouteImport } from './routes/customers'
 import { Route as PremiumCollectionRouteImport } from './routes/premium-collection'
 import { Route as ShopRouteImport } from './routes/shop'
@@ -45,6 +46,11 @@ const CheckoutRoute = CheckoutRouteImport.update({
 const ContactRoute = ContactRouteImport.update({
   id: '/contact',
   path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CustomTshirtDesignRoute = CustomTshirtDesignRouteImport.update({
+  id: '/custom-tshirt-design',
+  path: '/custom-tshirt-design',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CustomersRoute = CustomersRouteImport.update({
@@ -89,6 +95,7 @@ export interface FileRoutesByFullPath {
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
   '/contact': typeof ContactRoute
+  '/custom-tshirt-design': typeof CustomTshirtDesignRoute
   '/customers': typeof CustomersRoute
   '/premium-collection': typeof PremiumCollectionRoute
   '/shop': typeof ShopRoute
@@ -103,6 +110,7 @@ export interface FileRoutesByTo {
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
   '/contact': typeof ContactRoute
+  '/custom-tshirt-design': typeof CustomTshirtDesignRoute
   '/customers': typeof CustomersRoute
   '/premium-collection': typeof PremiumCollectionRoute
   '/shop': typeof ShopRoute
@@ -118,6 +126,7 @@ export interface FileRoutesById {
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
   '/contact': typeof ContactRoute
+  '/custom-tshirt-design': typeof CustomTshirtDesignRoute
   '/customers': typeof CustomersRoute
   '/premium-collection': typeof PremiumCollectionRoute
   '/shop': typeof ShopRoute
@@ -134,6 +143,7 @@ export interface FileRouteTypes {
     | '/cart'
     | '/checkout'
     | '/contact'
+    | '/custom-tshirt-design'
     | '/customers'
     | '/premium-collection'
     | '/shop'
@@ -148,6 +158,7 @@ export interface FileRouteTypes {
     | '/cart'
     | '/checkout'
     | '/contact'
+    | '/custom-tshirt-design'
     | '/customers'
     | '/premium-collection'
     | '/shop'
@@ -162,6 +173,7 @@ export interface FileRouteTypes {
     | '/cart'
     | '/checkout'
     | '/contact'
+    | '/custom-tshirt-design'
     | '/customers'
     | '/premium-collection'
     | '/shop'
@@ -177,6 +189,7 @@ export interface RootRouteChildren {
   CartRoute: typeof CartRoute
   CheckoutRoute: typeof CheckoutRoute
   ContactRoute: typeof ContactRoute
+  CustomTshirtDesignRoute: typeof CustomTshirtDesignRoute
   CustomersRoute: typeof CustomersRoute
   PremiumCollectionRoute: typeof PremiumCollectionRoute
   ShopRoute: typeof ShopRoute
@@ -221,6 +234,13 @@ declare module '@tanstack/react-router' {
       path: '/contact'
       fullPath: '/contact'
       preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/custom-tshirt-design': {
+      id: '/custom-tshirt-design'
+      path: '/custom-tshirt-design'
+      fullPath: '/custom-tshirt-design'
+      preLoaderRoute: typeof CustomTshirtDesignRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/customers': {
@@ -281,6 +301,7 @@ const rootRouteChildren: RootRouteChildren = {
   CartRoute: CartRoute,
   CheckoutRoute: CheckoutRoute,
   ContactRoute: ContactRoute,
+  CustomTshirtDesignRoute: CustomTshirtDesignRoute,
   CustomersRoute: CustomersRoute,
   PremiumCollectionRoute: PremiumCollectionRoute,
   ShopRoute: ShopRoute,

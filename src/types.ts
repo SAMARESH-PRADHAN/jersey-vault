@@ -12,8 +12,8 @@ export type CategorySlug =
   | "marathon"
   | "custom-premium"
   | "top-wear"
-  | "winter-top-wear";
-
+  | "winter-top-wear"
+  | "custom-tshirt";
 export type TopWearSubCategory = "all" | "round-neck" | "polo-neck";
 export type WinterSubCategory = "all" | "hoodie" | "sweatshirt" | "oversized-tshirt";
 
@@ -33,7 +33,14 @@ export interface Product {
   subCategory?: "round-neck" | "polo-neck" | "hoodie" | "sweatshirt" | "oversized-tshirt";
 }
 
-export type PrintType = "Sublimation Print" | "DTF Print" | "No Print";
+export type PrintType =
+  | "Sublimation Print"
+  | "DTF Print"
+  | "No Print"
+  | "Front Printed Jersey"
+  | "Front & Back Printed Jersey"
+  | "All Over Print Jersey";
+// export type PrintType = "Sublimation Print" | "DTF Print" | "No Print";
 export type PrintCategory = "Logo" | "Name" | "Number";
 
 export const SIZES = ["XS", "S", "M", "L", "XL", "2XL", "3XL"] as const;
