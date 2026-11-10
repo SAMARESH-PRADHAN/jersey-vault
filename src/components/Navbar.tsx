@@ -354,7 +354,7 @@ const navLink = "whitespace-nowrap text-sm font-bold uppercase tracking-wide tex
           </Link>
 
           <Link to="/custom-tshirt-design" className={cn(navLink, "flex items-center gap-1.5")}>
-            <Shirt className="h-3.5 w-3.5 shrink-0 text-lime" /><TwoLine text="Custom T-Shirt Design" />
+            <Shirt className="h-3.5 w-3.5 shrink-0 text-lime" /><TwoLine text="Custom Your Design" />
           </Link>
 
           <div className="relative">
@@ -477,7 +477,7 @@ const navLink = "whitespace-nowrap text-sm font-bold uppercase tracking-wide tex
                   <Sparkles className="h-4 w-4 text-lime" />Custom Premium Collection
                 </Link>
                 <Link onClick={() => setDrawer(false)} to="/custom-tshirt-design" className="flex items-center gap-1.5 rounded-xl px-3 py-3 font-bold uppercase hover:bg-surface-2">
-                  <Shirt className="h-4 w-4 text-lime" />Custom T-Shirt Design
+                  <Shirt className="h-4 w-4 text-lime" />Custom Your Design
                 </Link>
                 <Button variant="ghost" onClick={() => setTopWearAccordion((v) => !v)} aria-expanded={topWearAccordion} className="h-auto min-h-12 w-full justify-between rounded-xl px-3 py-3 text-left font-bold uppercase text-foreground">
                   <span className="min-w-0">Sports Top Wear</span><ChevronDown className={cn("h-4 w-4 shrink-0", topWearAccordion && "rotate-180")} />
