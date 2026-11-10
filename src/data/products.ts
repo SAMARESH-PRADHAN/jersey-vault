@@ -502,3 +502,14 @@ export const SEED_REVIEWS = [
   { user: "Priya Das", rating: 4, text: "Neon green looks even better in person. Will reorder for the next season." },
   { user: "Aditya Kulkarni", rating: 5, text: "Sublimation finish feels premium — teammates thought it was a big brand kit." },
 ];
+
+/** Bulk discount on PRODUCT price only (never on print charges). */
+export const QTY_DISCOUNT_TIERS = [
+  { min: 10, max: 22, pct: 10, label: "10 – 22 pcs" },
+  { min: 23, max: 40, pct: 20, label: "23 – 40 pcs" },
+  { min: 41, max: 70, pct: 30, label: "41 – 70 pcs" },
+  { min: 71, max: null, pct: 40, label: "71+ pcs" },
+] as const;
+
+export const getQtyDiscountPct = (qty: number): number =>
+  QTY_DISCOUNT_TIERS.find((t) => qty >= t.min && (t.max === null || qty <= t.max))?.pct ?? 0;

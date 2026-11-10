@@ -7,10 +7,11 @@ import { Button, Card, Stars } from "@/components/ui/kit";
 import { ProductCard } from "@/components/ProductCard";
 import { ShareWidget } from "@/components/ShareWidget";
 import { DESIGN_GUIDELINES, WASH_CARE } from "@/data/content";
-import { PRINT_CHARGES, PRODUCTS, getProduct } from "@/data/products";
 import { inr, uid } from "@/lib/storage";
 import { useApp } from "@/store/app";
 import { SIZES, type PersonRow, type PrintCategory, type PrintType, type Size } from "@/types";
+import { PRINT_CHARGES, PRODUCTS, getProduct, getQtyDiscountPct } from "@/data/products";
+import { QtyDiscountList } from "@/components/QtyDiscountList";
 
 export const Route = createFileRoute("/product/$productId")({
   loader: ({ params }) => {
@@ -64,7 +65,12 @@ function ProductDetail() {
   const needsRows = cats.includes("Name") || cats.includes("Number");
   const totalQty = Object.values(qty).reduce((a, b) => a + b, 0);
   const perUnitPrint = isTopWear ? 0 : cats.reduce((s, c) => s + PRINT_CHARGES[c], 0);
-  const total = totalQty * (product.price + perUnitPrint);
+  const discountPct = isTopWear ? 0 : getQtyDiscountPct(totalQty);
+const productTotal = totalQty * product.price;
+const discountAmt = Math.round((productTotal * discountPct) / 100);
+const printTotal = totalQty * perUnitPrint;
+const total = productTotal - discountAmt + printTotal;
+const perPc = totalQty ? Math.round(total / totalQty) : 0;
 
   const rowKeys = useMemo(() => {
     const keys: { key: string; size: Size }[] = [];
@@ -213,6 +219,11 @@ function ProductDetail() {
       note,
       totalQty,
       lineTotal: total,
+            discountPct,
+      productSubtotal: productTotal,
+      discountAmount: discountAmt,
+      printTotal,
+      perPiece: perPc,
     });
     navigate({ to: "/cart" });
   };
@@ -220,7 +231,11 @@ function ProductDetail() {
   const scrollRail = (d: number) => railRef.current?.scrollBy({ left: d * 280, behavior: "smooth" });
 
   return (
-    <div className="shell pt-6 pb-28 lg:py-10">
+    <div className="shell relative pt-6 pb-28 lg:py-10">
+      {/* Share button — top right */}
+<div className="mb-4 flex justify-end">
+  <ShareWidget name={product.name} code={product.code} />
+</div>
       <nav className="mb-6 text-xs font-bold uppercase tracking-wider text-muted-foreground">
         <Link to="/" className="hover:text-foreground">Home</Link> / <Link to="/shop" search={{ category: "all" }} className="hover:text-foreground">Shop</Link> / <span className="text-lime">{product.code}</span>
       </nav>
@@ -233,6 +248,7 @@ function ProductDetail() {
             <img src={product.images[active]} alt={`${product.name} view ${active + 1}`} width={1024} height={1024}
               className={`aspect-square w-full object-cover transition-transform duration-500 ${zoom ? "scale-150" : "scale-100"}`} />
           </button>
+          
           <div className="mt-3 grid grid-cols-4 gap-3">
             {product.images.map((src, i) => (
               <button key={i} onClick={() => setActive(i)} aria-label={`View image ${i + 1}`}
@@ -241,6 +257,7 @@ function ProductDetail() {
               </button>
             ))}
           </div>
+          {!isTopWear ? <QtyDiscountList qty={totalQty} className="mt-4 hidden lg:block" /> : null}
         </div>
 
         {/* config */}
@@ -259,7 +276,7 @@ function ProductDetail() {
           <p className="mt-4 text-sm text-muted-foreground">{product.description}</p>
           <p className="mt-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">Material: <span className="text-foreground">{product.material}</span></p>
           <p className="mt-1 text-xs font-bold uppercase tracking-wider text-muted-foreground">MOQ: <span className="text-lime">{isTopWear ? "1 pc (Max: 3 pcs)" : "5 pcs"}</span> · per piece</p>
-          <ShareWidget name={product.name} code={product.code} />
+          {!isTopWear ? <QtyDiscountList qty={totalQty} className="mt-4 lg:hidden" /> : null}
           {isTopWear ? <span className="mt-4 inline-flex rounded-full bg-accent px-4 py-2 text-xs font-black uppercase tracking-wider text-accent-foreground">Exclusive Ready-to-Wear</span> : null}
 
           {/* print type */}
@@ -420,15 +437,47 @@ function ProductDetail() {
 
           {/* bill */}
           <Card className="mt-6">
-            <div className="flex items-end justify-between gap-4">
-              <div>
+            
                 <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Live total bill</p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {totalQty} × {inr(product.price)}{perUnitPrint ? ` + ${inr(perUnitPrint)} print` : ""}
-                </p>
-              </div>
-              <span className="display text-3xl text-gradient">{inr(total)}</span>
-            </div>
+<dl className="mt-3 space-y-2 text-sm">
+  <div className="flex justify-between gap-4">
+    <dt className="text-muted-foreground">Product ({totalQty} × {inr(product.price)})</dt>
+    <dd className="shrink-0 text-right font-bold">{inr(productTotal)}</dd>
+  </div>
+
+  {discountPct ? (
+    <>
+      <div className="flex justify-between gap-4">
+        <dt className="text-lime">Bulk discount ({discountPct}%)</dt>
+        <dd className="shrink-0 text-right font-bold text-lime">− {inr(discountAmt)}</dd>
+      </div>
+      <div className="flex justify-between gap-4">
+        <dt className="text-muted-foreground">Product after discount</dt>
+        <dd className="shrink-0 text-right font-bold">{inr(productTotal - discountAmt)}</dd>
+      </div>
+    </>
+  ) : null}
+
+  {printTotal ? (
+    <div className="flex justify-between gap-4">
+      <dt className="text-muted-foreground">Print ({totalQty} × {inr(perUnitPrint)})</dt>
+      <dd className="shrink-0 text-right font-bold">{inr(printTotal)}</dd>
+    </div>
+  ) : null}
+
+  <div className="flex items-baseline justify-between gap-4 border-t border-border pt-3">
+    <dt className="text-sm font-extrabold uppercase">Total</dt>
+    <dd className="display shrink-0 text-right text-3xl text-gradient">{inr(total)}</dd>
+  </div>
+
+  {totalQty ? (
+    <div className="flex justify-between gap-4">
+      <dt className="text-muted-foreground">Per piece ({inr(total)} ÷ {totalQty})</dt>
+      <dd className="shrink-0 text-right font-bold text-lime">{inr(perPc)}/pc</dd>
+    </div>
+  ) : null}
+</dl>
+              
             {errors.length ? (
               <ul className="mt-3 space-y-1 text-xs font-semibold text-destructive">
                 {errors.map((e) => <li key={e}>• {e}</li>)}

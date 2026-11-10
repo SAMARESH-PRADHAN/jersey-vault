@@ -110,6 +110,12 @@ function Orders() {
                       <Link to="/product/$productId" params={{ productId: i.productId }}
                         className="block truncate text-sm font-extrabold transition hover:text-primary">{i.name}</Link>
                       <p className="text-xs text-muted-foreground">{i.printType} · {i.totalQty} pcs · {i.sizes.map((s) => `${s.size}×${s.qty}`).join(" ")}</p>
+                      {i.discountPct ? (
+  <p className="text-xs font-bold text-lime">
+    Product {inr(i.productSubtotal ?? 0)} − {i.discountPct}% = {inr((i.productSubtotal ?? 0) - (i.discountAmount ?? 0))}
+    {i.printTotal ? ` + print ${inr(i.printTotal)}` : ""} → {inr(i.lineTotal)} ÷ {i.totalQty} = {inr(i.perPiece ?? 0)}/pc
+  </p>
+) : null}
                     </div>
                     {o.statusIndex === 4 ? (
                       o.reviewedProducts.includes(i.productId) ? (

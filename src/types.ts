@@ -69,6 +69,11 @@ export interface CartItem {
   note: string;
   totalQty: number;
   lineTotal: number;
+    discountPct?: number;
+  productSubtotal?: number;  // qty × product price, before discount
+  discountAmount?: number;
+  printTotal?: number;
+  perPiece?: number;         // final price ÷ qty
 }
 
 export interface Address {

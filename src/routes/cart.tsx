@@ -71,6 +71,11 @@ function CartPage() {
                     <p className="mt-1 text-xs text-muted-foreground">
                       {item.sizes.map((s) => `${s.size}×${s.qty}`).join("  ")} · <span className="text-lime">{item.totalQty} pcs</span>
                     </p>
+                    {item.discountPct ? (
+  <p className="mt-1 text-xs font-bold text-lime">
+    {item.discountPct}% bulk discount (− {inr(item.discountAmount ?? 0)}) · {inr(item.perPiece ?? 0)}/pc
+  </p>
+) : null}
                     {item.logo ? (
                       <img src={item.logo} alt="Uploaded logo" className="mt-2 h-10 w-10 rounded-lg border border-border bg-background object-contain p-1" />
                     ) : null}
