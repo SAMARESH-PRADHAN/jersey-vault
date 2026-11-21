@@ -6,6 +6,7 @@ import { ProductCard } from "@/components/ProductCard";
 import { CategoryFilterList } from "@/components/CategoryFilterList";
 import { MobileFilterSheet, type ShopFilters } from "@/components/MobileFilterSheet";
 import { PRODUCTS, SHOP_FILTER_CATEGORIES, SHOP_MATERIALS } from "@/data/products";
+import { useLiveProducts } from "@/hooks/use-products";
 import { inr } from "@/lib/storage";
 import hero from "@/assets/hero-1.jpg";
 
@@ -30,6 +31,11 @@ export const Route = createFileRoute("/premium-collection")({
 });
 
 function PremiumCollection() {
+  const allProducts = useLiveProducts(PRODUCTS);
+  const premiumProducts = useMemo(
+    () => allProducts.filter((p) => p.category === "custom-premium"),
+    [allProducts]
+  );
   const navigate = Route.useNavigate();
   const [filterOpen, setFilterOpen] = useState(false);
   const [range, setRange] = useState<[number, number]>([0, MAXP]);
@@ -45,7 +51,7 @@ function PremiumCollection() {
   }, [sort, range[0], range[1], materials]);
 
   const list = useMemo(() => {
-    let l = PREMIUM.filter((p) => p.price >= range[0] && p.price <= range[1]);
+    let l = premiumProducts.filter((p) => p.price >= range[0] && p.price <= range[1]);
     if (materials.length) l = l.filter((p) => materials.includes(p.material));
     if (sort === "low") l = [...l].sort((a, b) => a.price - b.price);
     if (sort === "high") l = [...l].sort((a, b) => b.price - a.price);

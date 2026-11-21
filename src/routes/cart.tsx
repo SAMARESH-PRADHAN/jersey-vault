@@ -124,7 +124,10 @@ function CartPage() {
               <div className="mt-2 flex gap-2">
                 <input id="coupon" value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="JERSEY100"
                   className="h-11 w-full rounded-xl border border-input bg-background/60 px-4 text-sm" />
-                <Button onClick={() => applyCoupon(code) && setCode("")}>Apply</Button>
+                <Button onClick={async () => {
+                  const applied = await applyCoupon(code);
+                  if (applied) setCode("");
+                }}>Apply</Button>
               </div>
             )}
             <p className="mt-2 text-xs text-muted-foreground">

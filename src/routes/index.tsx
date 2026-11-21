@@ -8,6 +8,7 @@ import { ReviewMarquee } from "@/components/ReviewMarquee";
 import { ProductCard } from "@/components/ProductCard";
 import { CLUBS, FACTORY_STATS, SERVICES } from "@/data/content";
 import { CATEGORIES, PRODUCTS } from "@/data/products";
+import { useLiveProducts } from "@/hooks/use-products";
 import j1 from "@/assets/jersey-1.jpg";
 import j2 from "@/assets/jersey-2.jpg";
 import j3 from "@/assets/jersey-3.jpg";
@@ -59,10 +60,11 @@ function Counter({ value, suffix }: { value: number; suffix: string }) {
 }
 
 function Home() {
-  const featured = PRODUCTS.slice(0, 4);
-  const topWearProducts = PRODUCTS.filter((p) => p.category === "top-wear").slice(-4);
-  const winterProducts = PRODUCTS.filter((p) => p.category === "winter-top-wear");
-  const newArrivals = PRODUCTS.filter((p) => p.category === "top-wear").slice(0, 4);
+  const allProducts = useLiveProducts(PRODUCTS);
+  const featured = allProducts.slice(0, 4);
+  const topWearProducts = allProducts.filter((p) => p.category === "top-wear").slice(-4);
+  const winterProducts = allProducts.filter((p) => p.category === "winter-top-wear");
+  const newArrivals = allProducts.filter((p) => p.category === "top-wear").slice(0, 4);
 
   return (
     <>

@@ -11,11 +11,16 @@ import { inr, uid } from "@/lib/storage";
 import { useApp } from "@/store/app";
 import { SIZES, type PersonRow, type PrintCategory, type PrintType, type Size } from "@/types";
 import { PRINT_CHARGES, PRODUCTS, getProduct, getQtyDiscountPct } from "@/data/products";
+import { fetchLiveProduct, useLiveProducts } from "@/hooks/use-products";
 import { QtyDiscountList } from "@/components/QtyDiscountList";
 
 export const Route = createFileRoute("/product/$productId")({
-  loader: ({ params }) => {
-    const product = getProduct(params.productId);
+  loader: async ({ params }) => {
+    let product = getProduct(params.productId);
+    if (!product) {
+      const live = await fetchLiveProduct(params.productId);
+      if (live) product = live;
+    }
     if (!product) throw notFound();
     return { product };
   },
@@ -40,6 +45,7 @@ type Tab = "wash" | "overview" | "design";
 
 function ProductDetail() {
   const { product } = Route.useLoaderData();
+  const allProducts = useLiveProducts(PRODUCTS);
   const { user, openAuth, addToCart, productReviews } = useApp();
   const navigate = useNavigate();
 
@@ -82,7 +88,7 @@ const perPc = totalQty ? Math.round(total / totalQty) : 0;
 
   const reviews = productReviews(product.id);
   const avg = reviews.length ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length : product.rating;
-  const related = PRODUCTS.filter((p) => p.id !== product.id && p.category === product.category).slice(0, 6);
+  const related = allProducts.filter((p) => p.id !== product.id && p.category === product.category).slice(0, 6);
 
   const toggleCat = (c: PrintCategory) =>
     setCats((l) => (l.includes(c) ? l.filter((x) => x !== c) : [...l, c]));

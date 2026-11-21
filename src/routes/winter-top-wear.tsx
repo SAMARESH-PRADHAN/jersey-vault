@@ -6,6 +6,7 @@ import { Check, SlidersHorizontal, X } from "lucide-react";
 import { Button, Card, ProductSkeleton } from "@/components/ui/kit";
 import { ProductCard } from "@/components/ProductCard";
 import { WINTER_PRODUCTS, WINTER_SUBCATEGORIES } from "@/data/products";
+import { useLiveProducts } from "@/hooks/use-products";
 import { inr } from "@/lib/storage";
 import type { WinterSubCategory } from "@/types";
 import hero from "@/assets/hero-1.jpg";
@@ -35,6 +36,11 @@ export const Route = createFileRoute("/winter-top-wear")({
 });
 
 function WinterTopWear() {
+  const allProducts = useLiveProducts(WINTER_PRODUCTS);
+  const winterList = useMemo(
+    () => allProducts.filter((p) => p.category === "winter-top-wear"),
+    [allProducts]
+  );
   const sub = Route.useSearch().sub ?? "all";
   const navigate = Route.useNavigate();
   const [filterOpen, setFilterOpen] = useState(false);
@@ -50,7 +56,7 @@ function WinterTopWear() {
   }, [sub, sort, range[0], range[1]]);
 
   const list = useMemo(() => {
-    let l = WINTER_PRODUCTS.filter((p) => (sub === "all" || p.subCategory === sub) && p.price >= range[0] && p.price <= range[1]);
+    let l = winterList.filter((p) => (sub === "all" || p.subCategory === sub) && p.price >= range[0] && p.price <= range[1]);
     if (sort === "low") l = [...l].sort((a, b) => a.price - b.price);
     if (sort === "high") l = [...l].sort((a, b) => b.price - a.price);
     if (sort === "rating") l = [...l].sort((a, b) => b.rating - a.rating);

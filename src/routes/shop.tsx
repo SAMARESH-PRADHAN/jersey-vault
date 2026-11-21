@@ -4,6 +4,7 @@ import { SlidersHorizontal } from "lucide-react";
 import { Button, Card, ProductSkeleton } from "@/components/ui/kit";
 import { ProductCard } from "@/components/ProductCard";
 import { PRODUCTS, SHOP_CATEGORIES, SHOP_FILTER_CATEGORIES, SHOP_MATERIALS, getCategory } from "@/data/products";
+import { useLiveProducts } from "@/hooks/use-products";
 import { MobileFilterSheet, type ShopFilters } from "@/components/MobileFilterSheet";
 import { CategoryFilterList } from "@/components/CategoryFilterList";
 import type { CategorySlug, TopWearSubCategory } from "@/types";
@@ -40,6 +41,7 @@ function Shop() {
   const category = Route.useSearch().category ?? "all";
   const subCategory = Route.useSearch().subCategory ?? "all";
   const navigate = Route.useNavigate();
+  const allProducts = useLiveProducts(PRODUCTS);
   const [filterOpen, setFilterOpen] = useState(false);
   const [range, setRange] = useState<[number, number]>([0, MAXP]);
   const [sort, setSort] = useState<Sort>("featured");
@@ -56,7 +58,7 @@ function Shop() {
   }, [category, subCategory, sort, range[0], range[1], materials]);
 
   const list = useMemo(() => {
-    let l = PRODUCTS.filter((p) => (category === "all" ? p.category !== "winter-top-wear" && p.category !== "top-wear" : p.category === category));
+    let l = allProducts.filter((p) => (category === "all" ? p.category !== "winter-top-wear" && p.category !== "top-wear" : p.category === category));
     if (category === "top-wear" && subCategory !== "all") l = l.filter((p) => p.subCategory === subCategory);
     l = l.filter((p) => p.price >= range[0] && p.price <= range[1]);
     if (materials.length) l = l.filter((p) => materials.includes(p.material));
@@ -64,7 +66,7 @@ function Shop() {
     if (sort === "high") l = [...l].sort((a, b) => b.price - a.price);
     if (sort === "rating") l = [...l].sort((a, b) => b.rating - a.rating);
     return l;
-  }, [category, subCategory, materials, range, sort]);
+  }, [allProducts, category, subCategory, materials, range, sort]);
 
   const setCategory = (c: CategorySlug | "all") =>
     navigate({ to: ".", search: { category: c } });

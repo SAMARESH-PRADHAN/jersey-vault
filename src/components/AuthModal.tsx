@@ -41,16 +41,20 @@ export function AuthModal() {
     if (Object.keys(err).length) return;
 
     setBusy(true);
-    // Simulated network latency — replace with a real auth API call.
-    setTimeout(() => {
-      const msg =
-        tab === "signup"
-          ? signup({ name: form.name.trim(), email: form.email.trim(), phone: form.phone, password: form.password })
-          : login(form.email.trim(), form.password);
-      setBusy(false);
-      if (msg) setErrors({ form: msg });
-      else done();
-    }, 600);
+    (async () => {
+      try {
+        const msg =
+          tab === "signup"
+            ? await signup({ name: form.name.trim(), email: form.email.trim(), phone: form.phone, password: form.password })
+            : await login(form.email.trim(), form.password);
+        setBusy(false);
+        if (msg) setErrors({ form: msg });
+        else done();
+      } catch (e: any) {
+        setBusy(false);
+        setErrors({ form: e?.message || "Authentication error." });
+      }
+    })();
   };
 
   return (

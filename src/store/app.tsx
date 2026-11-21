@@ -10,12 +10,8 @@ import {
 import { toast } from "sonner";
 import { KEYS, read, uid, write } from "@/lib/storage";
 import { SEED_REVIEWS, PRODUCTS } from "@/data/products";
+import { callBackendApi } from "@/lib/api-client";
 import type { Address, CartItem, Order, Review, User } from "@/types";
-
-/**
- * Single app store (auth + cart + addresses + orders + reviews + coupons).
- * SWAP POINT: each localStorage read/write below maps 1:1 to an API call.
- */
 
 export interface Coupon {
   code: string;
@@ -35,8 +31,8 @@ export const GST_RATE = 0.05;
 interface AppState {
   ready: boolean;
   user: User | null;
-  signup: (d: { name: string; email: string; phone: string; password: string }) => string | null;
-  login: (email: string, password: string) => string | null;
+  signup: (d: { name: string; email: string; phone: string; password: string }) => Promise<string | null> | string | null;
+  login: (email: string, password: string) => Promise<string | null> | string | null;
   loginWithGoogle: () => void;
   logout: () => void;
   authOpen: boolean;
@@ -51,7 +47,7 @@ interface AppState {
   cartCount: number;
 
   coupon: Coupon | null;
-  applyCoupon: (code: string) => boolean;
+  applyCoupon: (code: string) => Promise<boolean> | boolean;
   removeCoupon: () => void;
   totals: { subtotal: number; discount: number; gst: number; total: number };
 
@@ -61,12 +57,12 @@ interface AppState {
   setDefaultAddress: (id: string) => void;
 
   orders: Order[];
-  placeOrder: (address: Address, payment: string, payMode?: "full" | "advance") => Order;
+  placeOrder: (address: Address, payment: string, payMode?: "full" | "advance") => Promise<Order>;
   payBalance: (id: string) => void;
   advanceOrder: (id: string) => void;
 
   reviews: Review[];
-  addReview: (r: Omit<Review, "id" | "date">, orderId?: string) => void;
+  addReview: (r: Omit<Review, "id" | "date">, orderId?: string) => Promise<void>;
   productReviews: (productId: string) => Review[];
 }
 
@@ -75,7 +71,7 @@ const Ctx = createContext<AppState | null>(null);
 function seedReviews(): Review[] {
   return SEED_REVIEWS.map((r, i) => ({
     id: `seed_${i}`,
-    productId: PRODUCTS[i % PRODUCTS.length]!.id,
+    productId: PRODUCTS[i % PRODUCTS.length]?.id ?? "p1",
     user: r.user,
     rating: r.rating,
     text: r.text,
@@ -94,20 +90,45 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [authOpen, setAuthOpen] = useState(false);
   const [authRedirect, setAuthRedirect] = useState<string | null>(null);
 
-  // Hydrate from localStorage after mount (SSR-safe).
+  // Hydrate from localStorage first, then sync with backend
   useEffect(() => {
-    setUser(read<User | null>(KEYS.session, null));
+    const cachedUser = read<User | null>(KEYS.session, null);
+    setUser(cachedUser);
     setCart(read<CartItem[]>(KEYS.cart, []));
     setAddresses(read<Address[]>(KEYS.addresses, []));
     setOrders(read<Order[]>(KEYS.orders, []));
     const stored = read<Review[] | null>(KEYS.reviews, null);
-    if (stored && stored.length) setReviews(stored);
-    else {
+    if (stored && stored.length) {
+      setReviews(stored);
+    } else {
       const s = seedReviews();
       setReviews(s);
       write(KEYS.reviews, s);
     }
     setReady(true);
+
+    // Fetch live reviews from backend in background
+    callBackendApi("storefront.listProductReviews")
+      .then((serverReviews) => {
+        if (Array.isArray(serverReviews) && serverReviews.length > 0) {
+          const mapped: Review[] = serverReviews.map((sr: any) => ({
+            id: sr.id || uid("rev"),
+            productId: sr.productId,
+            user: sr.customerName || sr.user || "Customer",
+            rating: Number(sr.rating) || 5,
+            text: sr.reviewText || sr.comment || sr.text || "",
+            date: sr.createdAt || new Date().toISOString(),
+          }));
+          setReviews((prev) => {
+            const combined = [...mapped, ...prev.filter((p) => !mapped.some((m) => m.id === p.id))];
+            write(KEYS.reviews, combined);
+            return combined;
+          });
+        }
+      })
+      .catch(() => {
+        // Fallback to local
+      });
   }, []);
 
   useEffect(() => { if (ready) write(KEYS.cart, cart); }, [cart, ready]);
@@ -116,7 +137,35 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => { if (ready) write(KEYS.reviews, reviews); }, [reviews, ready]);
 
   /* ---------------- auth ---------------- */
-  const signup: AppState["signup"] = (d) => {
+  const signup: AppState["signup"] = async (d) => {
+    try {
+      const serverUser = await callBackendApi("storefront.signup", {
+        name: d.name,
+        email: d.email,
+        phone: d.phone,
+        password: d.password,
+      });
+
+      if (serverUser && serverUser.id) {
+        const u: User = {
+          id: serverUser.id,
+          name: serverUser.name,
+          email: serverUser.email,
+          phone: serverUser.phone,
+          provider: "email",
+        };
+        write(KEYS.session, u);
+        setUser(u);
+        toast.success(`Welcome to Jersey Fit, ${u.name.split(" ")[0]}!`);
+        return null;
+      }
+    } catch (err: any) {
+      if (err?.message && !err.message.includes("failed with status")) {
+        return err.message;
+      }
+    }
+
+    // Local fallback if offline
     const users = read<User[]>(KEYS.users, []);
     if (users.some((u) => u.email.toLowerCase() === d.email.toLowerCase()))
       return "An account with this email already exists.";
@@ -128,7 +177,33 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return null;
   };
 
-  const login: AppState["login"] = (email, password) => {
+  const login: AppState["login"] = async (email, password) => {
+    try {
+      const serverUser = await callBackendApi("storefront.login", {
+        email,
+        password,
+      });
+
+      if (serverUser && serverUser.id) {
+        const u: User = {
+          id: serverUser.id,
+          name: serverUser.name,
+          email: serverUser.email,
+          phone: serverUser.phone,
+          provider: "email",
+        };
+        write(KEYS.session, u);
+        setUser(u);
+        toast.success(`Welcome back, ${u.name.split(" ")[0]}!`);
+        return null;
+      }
+    } catch (err: any) {
+      if (err?.message && !err.message.includes("failed with status")) {
+        return err.message;
+      }
+    }
+
+    // Local fallback if offline
     const users = read<User[]>(KEYS.users, []);
     const u = users.find((x) => x.email.toLowerCase() === email.toLowerCase());
     if (!u) return "No account found with this email.";
@@ -139,7 +214,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return null;
   };
 
-  // Mock Google OAuth — swap for a real provider SDK later.
   const loginWithGoogle = () => {
     const users = read<User[]>(KEYS.users, []);
     const email = "demo.player@gmail.com";
@@ -186,8 +260,32 @@ export function AppProvider({ children }: { children: ReactNode }) {
     total: subtotal - discount + gst,
   };
 
-  const applyCoupon = (code: string) => {
-    const c = COUPONS.find((x) => x.code === code.trim().toUpperCase());
+  const applyCoupon = async (code: string) => {
+    const cleanCode = code.trim().toUpperCase();
+
+    // First validate with backend admin API
+    try {
+      const serverRes = await callBackendApi("storefront.validateCoupon", {
+        code: cleanCode,
+        subtotal,
+      });
+
+      if (serverRes && serverRes.valid) {
+        const c: Coupon = {
+          code: serverRes.coupon?.code || cleanCode,
+          label: serverRes.coupon?.name || `Flat ₹${serverRes.discount} off`,
+          flat: Number(serverRes.discount) || 0,
+          minSubtotal: Number(serverRes.coupon?.minSubtotal) || 0,
+        };
+        setCoupon(c);
+        toast.success(`${c.code} applied — ${c.label}`);
+        return true;
+      }
+    } catch {
+      // Fallback to local coupons
+    }
+
+    const c = COUPONS.find((x) => x.code === cleanCode);
     if (!c) {
       toast.error("Invalid coupon code");
       return false;
@@ -200,6 +298,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     toast.success(`${c.code} applied — ${c.label}`);
     return true;
   };
+
   const removeCoupon = () => {
     setCoupon(null);
     toast("Coupon removed");
@@ -228,10 +327,64 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   /* ---------------- orders ---------------- */
-  const placeOrder: AppState["placeOrder"] = (address, payment, payMode = "full") => {
+  const placeOrder: AppState["placeOrder"] = async (address, payment, payMode = "full") => {
     const advance = payMode === "advance";
+    let orderId = `JF${Date.now().toString().slice(-8)}`;
+
+    // Map cart items to backend RPC format
+    const backendCartItems = cart.map((i) => ({
+      productId: i.productId,
+      quantity: i.totalQty,
+      size: i.sizes?.[0]?.size || "M",
+      printType: i.printType,
+      addOns: i.printCategories || [],
+      names: i.rows?.filter((r) => r.name).map((r) => r.name) || [],
+      numbers: i.rows?.filter((r) => r.number).map((r) => r.number) || [],
+      note: i.note || "",
+      logoFileUrl: i.logo || undefined,
+      rosterFileName: i.rosterName || undefined,
+    }));
+
+    // Post to Admin Studio Backend
+    try {
+      const serverResult = await callBackendApi("storefront.createOrder", {
+        cart: backendCartItems,
+        customer: {
+          id: user?.id,
+          name: address.name || user?.name || "Customer",
+          email: user?.email || "customer@example.com",
+          phone: address.phone || user?.phone || "9876543210",
+          city: address.city || "Mumbai",
+        },
+        address: {
+          line: address.house || "Address Line",
+          city: address.city,
+          state: address.state || "India",
+          pincode: address.pincode,
+          company: address.company || undefined,
+          gstin: address.gstin || undefined,
+        },
+        paymentMethod:
+          payment === "Cash on Delivery"
+            ? "COD"
+            : payment === "Card"
+            ? "Card"
+            : payment === "Net Banking"
+            ? "Net Banking"
+            : "UPI",
+        payMode,
+        couponCode: coupon?.code || undefined,
+      });
+
+      if (serverResult?.order?.id) {
+        orderId = serverResult.order.id;
+      }
+    } catch (err: any) {
+      console.warn("Could not sync order to backend, saving locally:", err?.message);
+    }
+
     const order: Order = {
-      id: `JF${Date.now().toString().slice(-8)}`,
+      id: orderId,
       date: new Date().toISOString(),
       items: cart,
       address,
@@ -247,6 +400,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       statusIndex: 0,
       reviewedProducts: [],
     };
+
     setOrders((o) => [order, ...o]);
     setCart([]);
     setCoupon(null);
@@ -267,9 +421,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   /* ---------------- reviews ---------------- */
-  const addReview: AppState["addReview"] = (r, orderId) => {
-    setReviews((l) => [{ ...r, id: uid("rev"), date: new Date().toISOString() }, ...l]);
-    if (orderId)
+  const addReview: AppState["addReview"] = async (r, orderId) => {
+    const newRev: Review = { ...r, id: uid("rev"), date: new Date().toISOString() };
+    setReviews((l) => [newRev, ...l]);
+
+    if (orderId) {
       setOrders((list) =>
         list.map((o) =>
           o.id === orderId
@@ -277,6 +433,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
             : o,
         ),
       );
+    }
+
+    // Sync review to Admin Studio
+    try {
+      await callBackendApi("storefront.createReview", {
+        productId: r.productId,
+        customerName: r.user,
+        rating: r.rating,
+        reviewText: r.text,
+      });
+    } catch {
+      // Local copy is already retained
+    }
+
     toast.success("Thanks for your review!");
   };
 

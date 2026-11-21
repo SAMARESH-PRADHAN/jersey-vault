@@ -88,12 +88,16 @@ function Checkout() {
   const confirm = () => {
     if (!address) return;
     setProcessing(true);
-    // SWAP POINT: POST /api/orders with a real payment gateway callback.
-    setTimeout(() => {
-      const order = placeOrder(address, method, payMode);
-      setProcessing(false);
-      setSuccess(order.id);
-      setTimeout(() => navigate({ to: "/profile/orders" }), 3000);
+    // Sync order to database & update state
+    setTimeout(async () => {
+      try {
+        const order = await placeOrder(address, method, payMode);
+        setProcessing(false);
+        setSuccess(order.id);
+        setTimeout(() => navigate({ to: "/profile/orders" }), 3000);
+      } catch (err: any) {
+        setProcessing(false);
+      }
     }, 1800);
   };
 
