@@ -26,6 +26,9 @@ export interface Product {
   mrp: number;
   material: string;
   description: string;
+  overview?: string;
+  washCare?: string;
+  designGuidelines?: string;
   images: string[];
   rating: number;
   tag?: string;

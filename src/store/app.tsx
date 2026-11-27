@@ -9,7 +9,7 @@ import {
 } from "react";
 import { toast } from "sonner";
 import { KEYS, read, uid, write } from "@/lib/storage";
-import { SEED_REVIEWS, PRODUCTS } from "@/data/products";
+// import { SEED_REVIEWS, PRODUCTS } from "@/data/products";
 import { callBackendApi } from "@/lib/api-client";
 import type { Address, CartItem, Order, Review, User } from "@/types";
 
@@ -31,7 +31,12 @@ export const GST_RATE = 0.05;
 interface AppState {
   ready: boolean;
   user: User | null;
-  signup: (d: { name: string; email: string; phone: string; password: string }) => Promise<string | null> | string | null;
+  signup: (d: {
+    name: string;
+    email: string;
+    phone: string;
+    password: string;
+  }) => Promise<string | null> | string | null;
   login: (email: string, password: string) => Promise<string | null> | string | null;
   loginWithGoogle: () => void;
   logout: () => void;
@@ -69,16 +74,16 @@ interface AppState {
 
 const Ctx = createContext<AppState | null>(null);
 
-function seedReviews(): Review[] {
-  return SEED_REVIEWS.map((r, i) => ({
-    id: `seed_${i}`,
-    productId: PRODUCTS[i % PRODUCTS.length]?.id ?? "p1",
-    user: r.user,
-    rating: r.rating,
-    text: r.text,
-    date: new Date(Date.now() - (i + 2) * 86400000).toISOString(),
-  }));
-}
+// function seedReviews(): Review[] {
+//   return SEED_REVIEWS.map((r, i) => ({
+//     id: `seed_${i}`,
+//     productId: PRODUCTS[i % PRODUCTS.length]?.id ?? "p1",
+//     user: r.user,
+//     rating: r.rating,
+//     text: r.text,
+//     date: new Date(Date.now() - (i + 2) * 86400000).toISOString(),
+//   }));
+// }
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
@@ -104,20 +109,47 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setAddresses([]);
       setOrders([]);
     }
-    const stored = read<Review[] | null>(KEYS.reviews, null);
-    if (stored && stored.length) {
-      setReviews(stored);
-    } else {
-      const s = seedReviews();
-      setReviews(s);
-      write(KEYS.reviews, s);
-    }
+    // const stored = read<Review[] | null>(KEYS.reviews, null);
+    // if (stored && stored.length) {
+    //   setReviews(stored);
+    // } else {
+    //   const s = seedReviews();
+    //   setReviews(s);
+    //   write(KEYS.reviews, s);
+    // }
+    // setReady(true);
+
+    // // Fetch live reviews from backend in background
+    // callBackendApi("storefront.listProductReviews")
+    //   .then((serverReviews) => {
+    //     if (Array.isArray(serverReviews) && serverReviews.length > 0) {
+    //       const mapped: Review[] = serverReviews.map((sr: any) => ({
+    //         id: sr.id || uid("rev"),
+    //         productId: sr.productId,
+    //         user: sr.customerName || sr.user || "Customer",
+    //         rating: Number(sr.rating) || 5,
+    //         text: sr.reviewText || sr.comment || sr.text || "",
+    //         date: sr.createdAt || new Date().toISOString(),
+    //       }));
+    //       setReviews((prev) => {
+    //         const combined = [...mapped, ...prev.filter((p) => !mapped.some((m) => m.id === p.id))];
+    //         write(KEYS.reviews, combined);
+    //         return combined;
+    //       });
+    //     }
+    //   })
+    //   .catch(() => {
+    //     // Fallback to local
+    //   });
+        // Reviews: only from local cache or backend — never seed demo reviews
+    const stored = read<Review[]>(KEYS.reviews, []);
+    setReviews(stored);
     setReady(true);
 
-    // Fetch live reviews from backend in background
+    // Fetch live reviews from backend
     callBackendApi("storefront.listProductReviews")
       .then((serverReviews) => {
-        if (Array.isArray(serverReviews) && serverReviews.length > 0) {
+        if (Array.isArray(serverReviews)) {
           const mapped: Review[] = serverReviews.map((sr: any) => ({
             id: sr.id || uid("rev"),
             productId: sr.productId,
@@ -126,22 +158,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
             text: sr.reviewText || sr.comment || sr.text || "",
             date: sr.createdAt || new Date().toISOString(),
           }));
-          setReviews((prev) => {
-            const combined = [...mapped, ...prev.filter((p) => !mapped.some((m) => m.id === p.id))];
-            write(KEYS.reviews, combined);
-            return combined;
-          });
+          // Use API list only (empty array if DB has no reviews)
+          setReviews(mapped);
+          write(KEYS.reviews, mapped);
         }
       })
       .catch(() => {
-        // Fallback to local
+        // Keep whatever was already in localStorage; do not invent seed data
       });
   }, []);
 
   const refreshOrders = useCallback(async () => {
     if (!user?.email) return;
     try {
-      const serverOrders = await callBackendApi("storefront.getCustomerOrders", { email: user.email, userId: user.id });
+      const serverOrders = await callBackendApi("storefront.getCustomerOrders", {
+        email: user.email,
+        userId: user.id,
+      });
       if (Array.isArray(serverOrders)) {
         setOrders((localOrders) => {
           const mappedServer: Order[] = serverOrders.map((so: any) => {
@@ -170,17 +203,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
             return {
               id: so.id,
               date: so.createdAt || new Date().toISOString(),
-              items: items.length > 0 ? items : (matchedLocal?.items || []),
-              address: so.address || matchedLocal?.address || {
-                id: "adr",
-                name: so.customerName,
-                phone: so.customerPhone,
-                pincode: "400001",
-                house: so.address?.line || "",
-                city: so.address?.city || "",
-                state: so.address?.state || "India",
-                isDefault: true,
-              },
+              items: items.length > 0 ? items : matchedLocal?.items || [],
+              address: so.address ||
+                matchedLocal?.address || {
+                  id: "adr",
+                  name: so.customerName,
+                  phone: so.customerPhone,
+                  pincode: "400001",
+                  house: so.address?.line || "",
+                  city: so.address?.city || "",
+                  state: so.address?.state || "India",
+                  isDefault: true,
+                },
               payment: so.paymentMethod,
               payMode: so.payMode,
               amountPaid: so.amountPaid,
@@ -479,10 +513,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
           payment === "Cash on Delivery"
             ? "COD"
             : payment === "Card"
-            ? "Card"
-            : payment === "Net Banking"
-            ? "Net Banking"
-            : "UPI",
+              ? "Card"
+              : payment === "Net Banking"
+                ? "Net Banking"
+                : "UPI",
         payMode,
         couponCode: coupon?.code || undefined,
       });
@@ -539,9 +573,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (orderId) {
       setOrders((list) =>
         list.map((o) =>
-          o.id === orderId
-            ? { ...o, reviewedProducts: [...o.reviewedProducts, r.productId] }
-            : o,
+          o.id === orderId ? { ...o, reviewedProducts: [...o.reviewedProducts, r.productId] } : o,
         ),
       );
     }
@@ -568,14 +600,37 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<AppState>(
     () => ({
-      ready, user, signup, login, loginWithGoogle, logout,
-      authOpen, openAuth, closeAuth, authRedirect,
-      cart, addToCart, removeFromCart, clearCart,
+      ready,
+      user,
+      signup,
+      login,
+      loginWithGoogle,
+      logout,
+      authOpen,
+      openAuth,
+      closeAuth,
+      authRedirect,
+      cart,
+      addToCart,
+      removeFromCart,
+      clearCart,
       cartCount: cart.reduce((s, i) => s + i.totalQty, 0),
-      coupon, applyCoupon, removeCoupon, totals,
-      addresses, saveAddress, deleteAddress, setDefaultAddress,
-      orders, refreshOrders, placeOrder, payBalance, advanceOrder,
-      reviews, addReview, productReviews,
+      coupon,
+      applyCoupon,
+      removeCoupon,
+      totals,
+      addresses,
+      saveAddress,
+      deleteAddress,
+      setDefaultAddress,
+      orders,
+      refreshOrders,
+      placeOrder,
+      payBalance,
+      advanceOrder,
+      reviews,
+      addReview,
+      productReviews,
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [ready, user, authOpen, authRedirect, cart, coupon, addresses, orders, reviews, refreshOrders],

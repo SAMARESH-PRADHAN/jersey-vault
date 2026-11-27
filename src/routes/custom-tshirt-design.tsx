@@ -17,6 +17,7 @@ import { inr, uid } from "@/lib/storage";
 import { useApp } from "@/store/app";
 import { SIZES, type PrintType, type Size } from "@/types";
 
+
 export const Route = createFileRoute("/custom-tshirt-design")({
   head: () => ({
     meta: [
@@ -64,9 +65,9 @@ function CustomTshirtDesign() {
   const perPc = totalQty ? Math.round(total / totalQty) : 0;
 
   const reviews = productReviews(product.id);
-  const avg = reviews.length
-    ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length
-    : product.rating;
+const avg = reviews.length
+  ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length
+  : 0;
 
   const step = (s: Size, d: number) => setQty((c) => ({ ...c, [s]: Math.max(0, (c[s] ?? 0) + d) }));
   const setSizeQuantity = (s: Size, v: number) =>
@@ -192,7 +193,9 @@ function CustomTshirtDesign() {
           <div className="mt-3 flex items-center gap-3">
             <Stars rating={avg} size={16} />
             <span className="text-xs text-muted-foreground">
-              {avg.toFixed(1)} · {reviews.length} review{reviews.length === 1 ? "" : "s"}
+              {avg.toFixed(1)} · {reviews.length > 0
+    ? `${avg.toFixed(1)} (${reviews.length} review${reviews.length > 1 ? "s" : ""})`
+    : "No ratings yet"}
             </span>
           </div>
           <div className="mt-4 flex items-baseline gap-3">
