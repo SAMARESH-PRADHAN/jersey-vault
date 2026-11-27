@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { Button, Card, Stars } from "@/components/ui/kit";
 import { ProductCard } from "@/components/ProductCard";
 import { ShareWidget } from "@/components/ShareWidget";
-import { DESIGN_GUIDELINES, WASH_CARE } from "@/data/content";
+// import { DESIGN_GUIDELINES, WASH_CARE } from "@/data/content";
 import { inr, uid } from "@/lib/storage";
 import { useApp } from "@/store/app";
 import { SIZES, type PersonRow, type PrintCategory, type PrintType, type Size } from "@/types";
@@ -86,8 +86,10 @@ const perPc = totalQty ? Math.round(total / totalQty) : 0;
     return keys;
   }, [qty]);
 
-  const reviews = productReviews(product.id);
-  const avg = reviews.length ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length : product.rating;
+const reviews = productReviews(product.id);
+const avg = reviews.length
+  ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length
+  : 0;
   const related = allProducts.filter((p) => p.id !== product.id && p.category === product.category).slice(0, 6);
 
   const toggleCat = (c: PrintCategory) =>
@@ -272,7 +274,9 @@ const perPc = totalQty ? Math.round(total / totalQty) : 0;
           <h1 className="mt-1 text-3xl sm:text-4xl">{product.name}</h1>
           <div className="mt-3 flex items-center gap-3">
             <Stars rating={avg} size={16} />
-            <span className="text-xs text-muted-foreground">{avg.toFixed(1)} · {reviews.length} review{reviews.length === 1 ? "" : "s"}</span>
+            <span className="text-xs text-muted-foreground">{avg.toFixed(1)} · {reviews.length > 0
+    ? `${avg.toFixed(1)} (${reviews.length} review${reviews.length > 1 ? "s" : ""})`
+    : "No ratings yet"}</span>
           </div>
           <div className="mt-4 flex items-baseline gap-3">
             <span className="display text-3xl text-gradient">{inr(product.price)}</span>
@@ -515,22 +519,37 @@ const perPc = totalQty ? Math.round(total / totalQty) : 0;
         </div>
         <Card className="mt-4">
           {tab === "overview" ? (
-            <div className="space-y-3 text-sm text-muted-foreground">
-              <p>{product.description}</p>
-              <p>Fabric: {product.material}. Fit: regular athletic. Neck: rib crew. Sleeve: short set-in.</p>
-              <p>Printed and stitched at our Tirupur unit with a 9-point quality check before dispatch.</p>
-            </div>
-          ) : null}
-          {tab === "wash" ? (
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              {WASH_CARE.map((w) => <li key={w}>• {w}</li>)}
-            </ul>
-          ) : null}
-          {tab === "design" ? (
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              {DESIGN_GUIDELINES.map((d) => <li key={d}>• {d}</li>)}
-            </ul>
-          ) : null}
+  <div className="prose prose-sm max-w-none text-muted-foreground">
+    {(product.overview || product.description || "No overview available.")
+      .split("\n")
+      .filter(Boolean)
+      .map((line, i) => (
+        <p key={i}>{line}</p>
+      ))}
+  </div>
+) : null}
+
+{tab === "wash" ? (
+  <ul className="space-y-2 text-sm text-muted-foreground">
+    {(product.washCare || "No wash care information available.")
+      .split("\n")
+      .filter(Boolean)
+      .map((line, i) => (
+        <li key={i}>• {line.replace(/^[•\-\*]\s*/, "")}</li>
+      ))}
+  </ul>
+) : null}
+
+{tab === "design" ? (
+  <ul className="space-y-2 text-sm text-muted-foreground">
+    {(product.designGuidelines || "No design guidelines available.")
+      .split("\n")
+      .filter(Boolean)
+      .map((line, i) => (
+        <li key={i}>• {line.replace(/^[•\-\*]\s*/, "")}</li>
+      ))}
+  </ul>
+) : null}
         </Card>
       </section>
 

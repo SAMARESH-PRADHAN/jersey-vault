@@ -26,9 +26,16 @@ function mapBackendProduct(bp: any): Product {
     price: Number(bp.price) || 699,
     mrp: Number(bp.mrp) || 999,
     material: bp.material || "Dry-Fit Interlock Polyester",
-    description: bp.description || "High-performance sports jersey engineered for comfort and durability.",
-    images: Array.isArray(bp.images) && bp.images.length > 0 ? bp.images : [bp.image || "/assets/jersey-1.jpg"],
-    rating: Number(bp.rating) || 4.8,
+    // description: bp.description || "High-performance sports jersey engineered for comfort and durability.",
+    // images: Array.isArray(bp.images) && bp.images.length > 0 ? bp.images : [bp.image || "/assets/jersey-1.jpg"],
+    // rating: Number(bp.rating) || 4.8,
+
+    description: bp.description || "",
+overview: bp.overview || bp.description || "",
+washCare: bp.washCare || bp.wash_care || "",
+designGuidelines: bp.designGuidelines || bp.design_guidelines || "",
+images: Array.isArray(bp.images) && bp.images.length > 0 ? bp.images : [bp.image || "/assets/jersey-1.jpg"],
+rating: Number(bp.rating) || 0,  // see Problem 2 as well
     tag: bp.tag || undefined,
     isExclusiveTopWear: Boolean(bp.isExclusiveTopWear),
     subCategory: bp.subCategory || undefined,
@@ -36,7 +43,7 @@ function mapBackendProduct(bp: any): Product {
 }
 
 export function useLiveProducts(initialFallback = PRODUCTS) {
-  const [products, setProducts] = useState<Product[]>(cachedProducts || initialFallback);
+  const [products, setProducts] = useState<Product[]>(cachedProducts || []);
 
   useEffect(() => {
     const handler = (next: Product[]) => setProducts(next);
@@ -46,11 +53,25 @@ export function useLiveProducts(initialFallback = PRODUCTS) {
     callBackendApi("storefront.listProducts", { page: 1, pageSize: 200 })
       .then((res) => {
         if (res && Array.isArray(res.products) && res.products.length > 0) {
-          const liveList = res.products.map(mapBackendProduct);
-          // Merge: include newly added DB products + fallback products if not overridden
-          const liveIds = new Set(liveList.map((p) => p.id));
-          const combined = [...liveList, ...initialFallback.filter((p) => !liveIds.has(p.id))];
-          notify(combined);
+          // const liveList = res.products.map(mapBackendProduct);
+          // // Merge: include newly added DB products + fallback products if not overridden
+          // const liveIds = new Set(liveList.map((p) => p.id));
+          // const combined = [...liveList, ...initialFallback.filter((p) => !liveIds.has(p.id))];
+          // notify(combined);
+
+          callBackendApi("storefront.listProducts", { page: 1, pageSize: 200 })
+  .then((res) => {
+    if (res && Array.isArray(res.products)) {
+      const liveList = res.products.map(mapBackendProduct);
+      notify(liveList); // empty array if DB has 0 products
+    } else {
+      notify([]);
+    }
+  })
+  .catch((err) => {
+    console.warn("Could not load products from backend API:", err?.message);
+    notify([]); // do not keep hardcoded PRODUCTS
+  });
         }
       })
       .catch((err) => {

@@ -3,9 +3,16 @@ import { motion } from "framer-motion";
 import { Stars } from "@/components/ui/kit";
 import { inr } from "@/lib/storage";
 import type { Product } from "@/types";
+import { useApp } from "@/store/app";
 
 export function ProductCard({ product }: { product: Product }) {
   const off = Math.round(((product.mrp - product.price) / product.mrp) * 100);
+
+  const { productReviews } = useApp();
+const reviews = productReviews(product.id);
+const avg = reviews.length
+  ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length
+  : 0;
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.4 }}>
@@ -36,7 +43,10 @@ export function ProductCard({ product }: { product: Product }) {
             {product.name}
           </h3>
           <div className="mt-2 flex items-center gap-2">
-            <Stars rating={product.rating} />
+<Stars rating={avg} />
+<span className="text-xs text-muted-foreground">
+  {reviews.length > 0 ? avg.toFixed(1) : "—"}
+</span>
             <span className="text-xs text-muted-foreground">{product.rating.toFixed(1)}</span>
           </div>
           <div className="mt-3 flex items-baseline gap-2">
