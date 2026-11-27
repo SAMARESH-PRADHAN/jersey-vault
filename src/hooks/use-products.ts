@@ -76,3 +76,57 @@ export async function fetchLiveProduct(id: string): Promise<Product | null> {
   }
   return null;
 }
+
+export interface CustomTshirtOption {
+  type: any;
+  price: number;
+  mrp: number;
+  text: string;
+}
+
+let cachedCustomDesignOptions: CustomTshirtOption[] | null = null;
+const designOptionListeners = new Set<(opts: CustomTshirtOption[]) => void>();
+
+export function useLiveCustomDesignOptions(initialFallback: CustomTshirtOption[]) {
+  const [options, setOptions] = useState<CustomTshirtOption[]>(cachedCustomDesignOptions || initialFallback);
+
+  useEffect(() => {
+    const handler = (next: CustomTshirtOption[]) => setOptions(next);
+    designOptionListeners.add(handler);
+
+    callBackendApi("storefront.listCustomDesignOptions")
+      .then((res) => {
+        if (Array.isArray(res) && res.length > 0) {
+          // Map DB records to storefront CUSTOM_TSHIRT_OPTIONS
+          const mapped: CustomTshirtOption[] = res.map((item: any) => {
+            let type: any = "Front Printed Jersey";
+            if (item.id === "front-back-printed-jersey" || item.name?.includes("Front & Back")) {
+              type = "Front & Back Printed Jersey";
+            } else if (item.id === "all-over-print-jersey" || item.name?.includes("All Over")) {
+              type = "All Over Print Jersey";
+            }
+
+            const fallback = initialFallback.find((f) => f.type === type);
+            return {
+              type,
+              price: Number(item.price) || fallback?.price || 599,
+              mrp: fallback?.mrp || Math.round((Number(item.price) || 599) * 1.5),
+              text: item.description || fallback?.text || "",
+            };
+          });
+
+          cachedCustomDesignOptions = mapped;
+          designOptionListeners.forEach((fn) => fn(mapped));
+        }
+      })
+      .catch((err) => {
+        console.warn("Could not load custom design options from backend:", err?.message);
+      });
+
+    return () => {
+      designOptionListeners.delete(handler);
+    };
+  }, [initialFallback]);
+
+  return options;
+}

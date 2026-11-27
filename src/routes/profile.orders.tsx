@@ -52,14 +52,8 @@ function Orders() {
   const [rating, setRating] = useState(5);
   const [text, setText] = useState("");
 
-  // Demo status progression: each pending order advances a step every 25s.
-  useEffect(() => {
-    const t = setInterval(() => {
-      orders.filter((o) => o.statusIndex < 4).forEach((o) => advanceOrder(o.id));
-    }, 25000);
-    return () => clearInterval(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [orders]);
+  // Demo auto-advancement removed in favor of live admin updates.
+  // Polls backend for live status updates if orders are active.
 
   if (!orders.length) {
     return (
@@ -77,7 +71,7 @@ function Orders() {
   return (
     <div className="shell py-12">
       <h1 className="text-3xl sm:text-4xl">My <span className="text-gradient">Orders</span></h1>
-      <p className="mt-1 text-sm text-muted-foreground">{orders.length} order{orders.length > 1 ? "s" : ""} · status advances automatically every 25 seconds</p>
+      <p className="mt-1 text-sm text-muted-foreground">{orders.length} order{orders.length > 1 ? "s" : ""} · live status updates</p>
 
       <div className="mt-8 space-y-5">
         {orders.map((o) => (

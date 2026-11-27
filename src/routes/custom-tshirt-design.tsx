@@ -11,6 +11,7 @@ import {
   CUSTOM_TSHIRT_PRODUCT,
   getQtyDiscountPct,
 } from "@/data/products";
+import { useLiveCustomDesignOptions } from "@/hooks/use-products";
 import { QtyDiscountList } from "@/components/QtyDiscountList";
 import { inr, uid } from "@/lib/storage";
 import { useApp } from "@/store/app";
@@ -38,6 +39,7 @@ export const Route = createFileRoute("/custom-tshirt-design")({
 type Tab = "overview" | "wash" | "design";
 
 function CustomTshirtDesign() {
+  const customOptions = useLiveCustomDesignOptions(CUSTOM_TSHIRT_OPTIONS);
   const product = CUSTOM_TSHIRT_PRODUCT;
   const { user, openAuth, addToCart, productReviews } = useApp();
   const navigate = useNavigate();
@@ -53,7 +55,7 @@ function CustomTshirtDesign() {
   const [errors, setErrors] = useState<string[]>([]);
 
   const selected =
-    CUSTOM_TSHIRT_OPTIONS.find((o) => o.type === optionType) ?? CUSTOM_TSHIRT_OPTIONS[0]!;
+    customOptions.find((o) => o.type === optionType) ?? customOptions[0] ?? CUSTOM_TSHIRT_OPTIONS[0]!;
   const totalQty = Object.values(qty).reduce((a, b) => a + b, 0);
   const discountPct = getQtyDiscountPct(totalQty);
   const productTotal = totalQty * selected.price;
@@ -221,7 +223,7 @@ function CustomTshirtDesign() {
                 Print type
               </legend>
               <div className="mt-2 grid gap-3">
-                {CUSTOM_TSHIRT_OPTIONS.map((o) => (
+                {customOptions.map((o) => (
                   <label
                     key={o.type}
                     className={`flex cursor-pointer items-center justify-between gap-3 rounded-xl border-2 p-3 ${optionType === o.type ? "border-primary bg-primary/10" : "border-border"}`}

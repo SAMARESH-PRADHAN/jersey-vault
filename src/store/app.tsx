@@ -57,6 +57,7 @@ interface AppState {
   setDefaultAddress: (id: string) => void;
 
   orders: Order[];
+  refreshOrders: () => Promise<void>;
   placeOrder: (address: Address, payment: string, payMode?: "full" | "advance") => Promise<Order>;
   payBalance: (id: string) => void;
   advanceOrder: (id: string) => void;
@@ -95,8 +96,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const cachedUser = read<User | null>(KEYS.session, null);
     setUser(cachedUser);
     setCart(read<CartItem[]>(KEYS.cart, []));
-    setAddresses(read<Address[]>(KEYS.addresses, []));
-    setOrders(read<Order[]>(KEYS.orders, []));
+    if (cachedUser?.email) {
+      const emailKey = cachedUser.email.toLowerCase();
+      setAddresses(read<Address[]>(`${KEYS.addresses}_${emailKey}`, []));
+      setOrders(read<Order[]>(`${KEYS.orders}_${emailKey}`, []));
+    } else {
+      setAddresses([]);
+      setOrders([]);
+    }
     const stored = read<Review[] | null>(KEYS.reviews, null);
     if (stored && stored.length) {
       setReviews(stored);
@@ -131,10 +138,84 @@ export function AppProvider({ children }: { children: ReactNode }) {
       });
   }, []);
 
-  useEffect(() => { if (ready) write(KEYS.cart, cart); }, [cart, ready]);
-  useEffect(() => { if (ready) write(KEYS.addresses, addresses); }, [addresses, ready]);
-  useEffect(() => { if (ready) write(KEYS.orders, orders); }, [orders, ready]);
-  useEffect(() => { if (ready) write(KEYS.reviews, reviews); }, [reviews, ready]);
+  const refreshOrders = useCallback(async () => {
+    if (!user?.email) return;
+    try {
+      const serverOrders = await callBackendApi("storefront.getCustomerOrders", { email: user.email, userId: user.id });
+      if (Array.isArray(serverOrders)) {
+        setOrders((localOrders) => {
+          const mappedServer: Order[] = serverOrders.map((so: any) => {
+            const matchedLocal = localOrders.find((lo) => lo.id === so.id);
+            const items: CartItem[] = (so.items || []).map((si: any) => ({
+              id: si.id,
+              productId: si.productId,
+              name: si.productName,
+              code: si.productCode || "JF",
+              image: si.logoFileUrl || "/assets/jersey-1.jpg",
+              unitPrice: si.unitPrice,
+              printType: si.printType || "Sublimation Print",
+              printCategories: si.addOns || [],
+              sizes: [{ size: si.size, qty: si.quantity }],
+              rows: (si.names || []).map((name: string, idx: number) => ({
+                key: `r-${idx}`,
+                size: si.size,
+                name,
+                number: si.numbers?.[idx] || "",
+              })),
+              note: si.note || "",
+              totalQty: si.quantity,
+              lineTotal: si.unitPrice * si.quantity,
+            }));
+
+            return {
+              id: so.id,
+              date: so.createdAt || new Date().toISOString(),
+              items: items.length > 0 ? items : (matchedLocal?.items || []),
+              address: so.address || matchedLocal?.address || {
+                id: "adr",
+                name: so.customerName,
+                phone: so.customerPhone,
+                pincode: "400001",
+                house: so.address?.line || "",
+                city: so.address?.city || "",
+                state: so.address?.state || "India",
+                isDefault: true,
+              },
+              payment: so.paymentMethod,
+              payMode: so.payMode,
+              amountPaid: so.amountPaid,
+              balancePaid: so.balancePaid === 0,
+              subtotal: so.subtotal,
+              discount: so.discount,
+              coupon: so.coupon || undefined,
+              gst: so.gst,
+              total: so.total,
+              statusIndex: so.statusIndex ?? 0,
+              reviewedProducts: matchedLocal?.reviewedProducts || [],
+            };
+          });
+
+          // Store isolated per user email
+          write(`${KEYS.orders}_${user.email.toLowerCase()}`, mappedServer);
+          return mappedServer;
+        });
+      }
+    } catch (err) {
+      console.warn("Could not sync customer orders from backend:", err);
+    }
+  }, [user?.email, user?.id]);
+
+  // Sync customer orders from backend whenever user is logged in & set up polling
+  useEffect(() => {
+    if (!ready || !user?.email) return;
+    void refreshOrders();
+
+    const interval = setInterval(() => {
+      void refreshOrders();
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [ready, user?.email, refreshOrders]);
 
   /* ---------------- auth ---------------- */
   const signup: AppState["signup"] = async (d) => {
@@ -156,6 +237,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         };
         write(KEYS.session, u);
         setUser(u);
+        const emailKey = u.email.toLowerCase();
+        setAddresses(read<Address[]>(`${KEYS.addresses}_${emailKey}`, []));
+        setOrders(read<Order[]>(`${KEYS.orders}_${emailKey}`, []));
         toast.success(`Welcome to Jersey Fit, ${u.name.split(" ")[0]}!`);
         return null;
       }
@@ -173,6 +257,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     write(KEYS.users, [...users, u]);
     write(KEYS.session, u);
     setUser(u);
+    const emailKey = u.email.toLowerCase();
+    setAddresses(read<Address[]>(`${KEYS.addresses}_${emailKey}`, []));
+    setOrders(read<Order[]>(`${KEYS.orders}_${emailKey}`, []));
     toast.success(`Welcome to Jersey Fit, ${u.name.split(" ")[0]}!`);
     return null;
   };
@@ -194,6 +281,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         };
         write(KEYS.session, u);
         setUser(u);
+        const emailKey = u.email.toLowerCase();
+        setAddresses(read<Address[]>(`${KEYS.addresses}_${emailKey}`, []));
+        setOrders(read<Order[]>(`${KEYS.orders}_${emailKey}`, []));
         toast.success(`Welcome back, ${u.name.split(" ")[0]}!`);
         return null;
       }
@@ -210,6 +300,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (u.password !== password) return "Incorrect password.";
     write(KEYS.session, u);
     setUser(u);
+    const emailKey = u.email.toLowerCase();
+    setAddresses(read<Address[]>(`${KEYS.addresses}_${emailKey}`, []));
+    setOrders(read<Order[]>(`${KEYS.orders}_${emailKey}`, []));
     toast.success(`Welcome back, ${u.name.split(" ")[0]}!`);
     return null;
   };
@@ -230,6 +323,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const logout = () => {
     write(KEYS.session, null);
     setUser(null);
+    setOrders([]);
+    setAddresses([]);
     toast("Logged out");
   };
 
@@ -313,16 +408,32 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const targetId = id ?? next[next.length - 1]?.id;
       if (a.isDefault) next = next.map((x) => ({ ...x, isDefault: x.id === targetId }));
       if (!next.some((x) => x.isDefault) && next[0]) next[0] = { ...next[0], isDefault: true };
+
+      if (user?.email) {
+        write(`${KEYS.addresses}_${user.email.toLowerCase()}`, next);
+      }
       return next;
     });
     toast.success(id ? "Address updated" : "Address added");
   };
   const deleteAddress = (id: string) => {
-    setAddresses((l) => l.filter((x) => x.id !== id));
+    setAddresses((l) => {
+      const next = l.filter((x) => x.id !== id);
+      if (user?.email) {
+        write(`${KEYS.addresses}_${user.email.toLowerCase()}`, next);
+      }
+      return next;
+    });
     toast("Address deleted");
   };
   const setDefaultAddress = (id: string) => {
-    setAddresses((l) => l.map((x) => ({ ...x, isDefault: x.id === id })));
+    setAddresses((l) => {
+      const next = l.map((x) => ({ ...x, isDefault: x.id === id }));
+      if (user?.email) {
+        write(`${KEYS.addresses}_${user.email.toLowerCase()}`, next);
+      }
+      return next;
+    });
     toast.success("Default address updated");
   };
 
@@ -463,11 +574,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
       cartCount: cart.reduce((s, i) => s + i.totalQty, 0),
       coupon, applyCoupon, removeCoupon, totals,
       addresses, saveAddress, deleteAddress, setDefaultAddress,
-      orders, placeOrder, payBalance, advanceOrder,
+      orders, refreshOrders, placeOrder, payBalance, advanceOrder,
       reviews, addReview, productReviews,
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [ready, user, authOpen, authRedirect, cart, coupon, addresses, orders, reviews],
+    [ready, user, authOpen, authRedirect, cart, coupon, addresses, orders, reviews, refreshOrders],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
