@@ -37,7 +37,9 @@ designGuidelines: bp.designGuidelines || bp.design_guidelines || "",
 images: Array.isArray(bp.images) && bp.images.length > 0 ? bp.images : [bp.image || "/assets/jersey-1.jpg"],
 rating: Number(bp.rating) || 0,  // see Problem 2 as well
     tag: bp.tag || undefined,
-    isExclusiveTopWear: Boolean(bp.isExclusiveTopWear),
+       isExclusiveTopWear: Boolean(bp.isExclusiveTopWear),
+    family: bp.family,
+    dbCategory: bp.category,
     subCategory: bp.subCategory || undefined,
   };
 }
