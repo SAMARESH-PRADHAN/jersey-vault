@@ -8,6 +8,7 @@ import { AddressForm } from "@/routes/profile.address";
 import { getProduct } from "@/data/products";
 import { GST_RATE, useApp } from "@/store/app";
 import { inr } from "@/lib/storage";
+import { useLiveProducts } from "@/hooks/use-products";
 import type { Address } from "@/types";
 
 export const Route = createFileRoute("/checkout")({
@@ -49,7 +50,11 @@ function Checkout() {
   const [payErrors, setPayErrors] = useState<Record<string, string>>({});
   const [processing, setProcessing] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
-
+const liveProducts = useLiveProducts();
+const hasCustom = cart.some((i) => {
+  const p = liveProducts.find((x) => x.id === i.productId) ?? getProduct(i.productId);
+  return p ? !p.isExclusiveTopWear : i.productId === "ct1";
+});
   useEffect(() => {
     const def = addresses.find((a) => a.isDefault) ?? addresses[0];
     if (def && !addrId) setAddrId(def.id);
@@ -66,10 +71,10 @@ function Checkout() {
 
   // Customisable cart (custom team jerseys / custom premium) allows the 50% advance;
   // a readymade-only cart (Top Wear, Winter Top Wear) must pay in full.
-  const hasCustom = cart.some((i) => {
-    const p = getProduct(i.productId);
-    return !!p && !p.isExclusiveTopWear;
-  });
+  // const hasCustom = cart.some((i) => {
+  //   const p = getProduct(i.productId);
+  //   return !!p && !p.isExclusiveTopWear;
+  // });
   const dueNow = payMode === "advance" ? Math.round(totals.total / 2) : totals.total;
   const balance = totals.total - dueNow;
 

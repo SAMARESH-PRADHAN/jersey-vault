@@ -10,7 +10,7 @@ import {
   CUSTOM_TSHIRT_OPTIONS,
   CUSTOM_TSHIRT_PRODUCT,
 } from "@/data/products";
-import { pctForQty, useDiscountTiers } from "@/hooks/use-pricing-config";
+import { pctForQty, usePricingConfig  } from "@/hooks/use-pricing-config";
 import { useLiveCustomDesignOptions } from "@/hooks/use-products";
 import { QtyDiscountList } from "@/components/QtyDiscountList";
 import { inr, uid } from "@/lib/storage";
@@ -42,8 +42,10 @@ type Tab = "overview" | "wash" | "design";
 function CustomTshirtDesign() {
   const customOptions = useLiveCustomDesignOptions(CUSTOM_TSHIRT_OPTIONS);
   const product = CUSTOM_TSHIRT_PRODUCT;
-  const tiers = useDiscountTiers(product);
-    const { user, openAuth, addToCart, productReviews } = useApp();
+  const config = usePricingConfig(product);
+  const tiers = config.discountTiers;
+  const moq = config.moq;
+      const { user, openAuth, addToCart, productReviews } = useApp();
   const navigate = useNavigate();
 
   const [active, setActive] = useState(0);
@@ -98,8 +100,8 @@ const avg = reviews.length
     const errs: string[] = [];
     if (!design) errs.push("Upload your design image to continue.");
     if (totalQty === 0) errs.push("Select at least one size and quantity.");
-    else if (totalQty < CUSTOM_TSHIRT_MOQ)
-      errs.push(`Minimum order is ${CUSTOM_TSHIRT_MOQ} pieces.`);
+       else if (totalQty < moq)
+      errs.push(`Minimum order is ${moq} pieces.`);
     setErrors(errs);
     if (errs.length) {
       toast.error(errs[0] ?? "Please check your selection.");
@@ -209,7 +211,7 @@ const avg = reviews.length
             Material: <span className="text-foreground">{product.material}</span>
           </p>
           <p className="mt-1 text-xs font-bold uppercase tracking-wider text-muted-foreground">
-            MOQ: <span className="text-lime">{CUSTOM_TSHIRT_MOQ} pcs</span> · per piece
+            MOQ: <span className="text-lime">{moq} pcs</span> · per piece
           </p>
           {/* <ShareWidget name={product.name} code={product.code} /> */}
           <QtyDiscountList qty={totalQty} tiers={tiers} className="mt-4 lg:hidden" />

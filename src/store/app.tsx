@@ -12,6 +12,7 @@ import { KEYS, read, uid, write } from "@/lib/storage";
 // import { SEED_REVIEWS, PRODUCTS } from "@/data/products";
 import { callBackendApi } from "@/lib/api-client";
 import type { Address, CartItem, Order, Review, User } from "@/types";
+import fallbackImg from "@/assets/jersey-1.jpg";
 
 export interface Coupon {
   code: string;
@@ -96,6 +97,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [authOpen, setAuthOpen] = useState(false);
   const [authRedirect, setAuthRedirect] = useState<string | null>(null);
 
+  const loadReviews = useCallback(async () => {
+  try {
+    const server = await callBackendApi("storefront.listProductReviews");
+    if (Array.isArray(server)) {
+      const mapped: Review[] = server.map((sr: any) => ({
+        id: sr.id || uid("rev"),
+        productId: sr.productId,
+        user: sr.customerName || sr.user || "Customer",
+        rating: Number(sr.rating) || 5,
+        text: sr.reviewText || sr.comment || sr.text || "",
+        date: sr.createdAt || sr.date || new Date().toISOString(),
+      }));
+      setReviews(mapped);
+      write(KEYS.reviews, mapped);
+    }
+  } catch { /* keep cached reviews */ }
+}, []);
   // Hydrate from localStorage first, then sync with backend
   useEffect(() => {
     const cachedUser = read<User | null>(KEYS.session, null);
@@ -179,42 +197,65 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setOrders((localOrders) => {
           const mappedServer: Order[] = serverOrders.map((so: any) => {
             const matchedLocal = localOrders.find((lo) => lo.id === so.id);
-            const items: CartItem[] = (so.items || []).map((si: any) => ({
-              id: si.id,
-              productId: si.productId,
-              name: si.productName,
-              code: si.productCode || "JF",
-              image: si.logoFileUrl || "/assets/jersey-1.jpg",
-              unitPrice: si.unitPrice,
-              printType: si.printType || "Sublimation Print",
-              printCategories: si.addOns || [],
-              sizes: [{ size: si.size, qty: si.quantity }],
-              rows: (si.names || []).map((name: string, idx: number) => ({
-                key: `r-${idx}`,
-                size: si.size,
-                name,
-                number: si.numbers?.[idx] || "",
-              })),
-              note: si.note || "",
-              totalQty: si.quantity,
-              lineTotal: si.unitPrice * si.quantity,
-            }));
+            // const items: CartItem[] = (so.items || []).map((si: any) => ({
+            //   id: si.id,
+            //   productId: si.productId,
+            //   name: si.productName,
+            //   code: si.productCode || "JF",
+            //   image: si.logoFileUrl || "/assets/jersey-1.jpg",
+            //   unitPrice: si.unitPrice,
+            //   printType: si.printType || "Sublimation Print",
+            //   printCategories: si.addOns || [],
+            //   sizes: [{ size: si.size, qty: si.quantity }],
+            //   rows: (si.names || []).map((name: string, idx: number) => ({
+            //     key: `r-${idx}`,
+            //     size: si.size,
+            //     name,
+            //     number: si.numbers?.[idx] || "",
+            //   })),
+            //   note: si.note || "",
+            //   totalQty: si.quantity,
+            //   lineTotal: si.unitPrice * si.quantity,
+            // }));
+            const items: CartItem[] = (so.items || []).map((si: any) => {
+  const li = matchedLocal?.items.find((x) => x.productId === si.productId);
+  const unit = Number(si.unitPrice) || 0;
+  return {
+    id: si.id,
+    productId: si.productId,
+    name: si.productName,
+    code: li?.code || "JF",
+    image: si.image || li?.image || fallbackImg,
+    unitPrice: unit,
+    printType: si.printType || "Sublimation Print",
+    printCategories: si.addOns || [],
+    sizes: [{ size: si.size, qty: si.quantity }],
+    rows: (si.names || []).map((name: string, idx: number) => ({
+      key: `r-${idx}`, size: si.size, name, number: si.numbers?.[idx] || "",
+    })),
+    note: si.note || "",
+    totalQty: si.quantity,
+    lineTotal: li?.lineTotal ?? unit * si.quantity,
+    discountPct: Number(si.discountPct) || 0,
+  };
+});
 
             return {
               id: so.id,
               date: so.createdAt || new Date().toISOString(),
               items: items.length > 0 ? items : matchedLocal?.items || [],
-              address: so.address ||
-                matchedLocal?.address || {
-                  id: "adr",
-                  name: so.customerName,
-                  phone: so.customerPhone,
-                  pincode: "400001",
-                  house: so.address?.line || "",
-                  city: so.address?.city || "",
-                  state: so.address?.state || "India",
-                  isDefault: true,
-                },
+              address: {
+  id: matchedLocal?.address.id ?? "adr",
+  name: so.customerName,
+  phone: so.customerPhone,
+  house: so.address?.line ?? "",
+  city: so.address?.city ?? "",
+  state: so.address?.state ?? "India",
+  pincode: so.address?.pincode ?? "",
+  isDefault: true,
+  ...(so.address?.company ? { company: so.address.company } : {}),
+  ...(so.address?.gstin ? { gstin: so.address.gstin } : {}),
+},
               payment: so.paymentMethod,
               payMode: so.payMode,
               amountPaid: so.amountPaid,
@@ -509,6 +550,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           company: address.company || undefined,
           gstin: address.gstin || undefined,
         },
+      
         paymentMethod:
           payment === "Cash on Delivery"
             ? "COD"
@@ -525,8 +567,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         orderId = serverResult.order.id;
       }
     } catch (err: any) {
-      console.warn("Could not sync order to backend, saving locally:", err?.message);
-    }
+  toast.error(err?.message || "Could not place your order. Please try again.");
+  throw err;
+}
 
     const order: Order = {
       id: orderId,

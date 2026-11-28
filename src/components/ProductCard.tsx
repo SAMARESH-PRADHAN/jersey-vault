@@ -4,9 +4,11 @@ import { Stars } from "@/components/ui/kit";
 import { inr } from "@/lib/storage";
 import type { Product } from "@/types";
 import { useApp } from "@/store/app";
+import { usePricingConfig } from "@/hooks/use-pricing-config";
 
 export function ProductCard({ product }: { product: Product }) {
-  const off = Math.round(((product.mrp - product.price) / product.mrp) * 100);
+    const off = Math.round(((product.mrp - product.price) / product.mrp) * 100);
+  const config = usePricingConfig(product);
 
   const { productReviews } = useApp();
 const reviews = productReviews(product.id);
@@ -54,7 +56,7 @@ const avg = reviews.length
             <span className="text-xs text-muted-foreground line-through">{inr(product.mrp)}</span>
           </div>
           <span className="mt-2 inline-flex rounded-full border border-border bg-surface/60 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-muted-foreground">
-            {product.isExclusiveTopWear ? "MOQ 1 pc · Max 3" : "MOQ 5 pcs"}
+                       {`MOQ ${config.moq} pc${config.moq > 1 ? "s" : ""}${config.maxQty !== null ? ` · Max ${config.maxQty}` : ""}`}
           </span>
         </div>
       </Link>
