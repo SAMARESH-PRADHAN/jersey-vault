@@ -10,7 +10,8 @@ import { ShareWidget } from "@/components/ShareWidget";
 import { inr, uid } from "@/lib/storage";
 import { useApp } from "@/store/app";
 import { SIZES, type PersonRow, type PrintCategory, type PrintType, type Size } from "@/types";
-import { PRINT_CHARGES, PRODUCTS, getProduct, getQtyDiscountPct } from "@/data/products";
+import { PRINT_CHARGES, PRODUCTS, getProduct } from "@/data/products";
+import { pctForQty, useDiscountTiers } from "@/hooks/use-pricing-config";
 import { fetchLiveProduct, useLiveProducts } from "@/hooks/use-products";
 import { QtyDiscountList } from "@/components/QtyDiscountList";
 
@@ -62,7 +63,7 @@ function ProductDetail() {
   const [errors, setErrors] = useState<string[]>([]);
   const railRef = useRef<HTMLDivElement>(null);
   const isTopWear = product.isExclusiveTopWear || product.category === "top-wear";
-
+  const tiers = useDiscountTiers(product);
   useEffect(() => {
     setActive(0); setQty({}); setRows({}); setCats([]); setLogo(undefined); setNote(""); setRosterName(undefined);
     setPrintType(product.isExclusiveTopWear || product.category === "top-wear" ? "No Print" : "Sublimation Print");
@@ -71,8 +72,8 @@ function ProductDetail() {
   const needsRows = cats.includes("Name") || cats.includes("Number");
   const totalQty = Object.values(qty).reduce((a, b) => a + b, 0);
   const perUnitPrint = isTopWear ? 0 : cats.reduce((s, c) => s + PRINT_CHARGES[c], 0);
-  const discountPct = isTopWear ? 0 : getQtyDiscountPct(totalQty);
-const productTotal = totalQty * product.price;
+  const discountPct = isTopWear ? 0 : pctForQty(totalQty, tiers);
+  const productTotal = totalQty * product.price;
 const discountAmt = Math.round((productTotal * discountPct) / 100);
 const printTotal = totalQty * perUnitPrint;
 const total = productTotal - discountAmt + printTotal;
@@ -265,7 +266,7 @@ const avg = reviews.length
               </button>
             ))}
           </div>
-          {!isTopWear ? <QtyDiscountList qty={totalQty} className="mt-4 hidden lg:block" /> : null}
+          {!isTopWear ? <QtyDiscountList qty={totalQty} tiers={tiers} className="mt-4 hidden lg:block" />: null}
         </div>
 
         {/* config */}
@@ -286,7 +287,7 @@ const avg = reviews.length
           <p className="mt-4 text-sm text-muted-foreground">{product.description}</p>
           <p className="mt-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">Material: <span className="text-foreground">{product.material}</span></p>
           <p className="mt-1 text-xs font-bold uppercase tracking-wider text-muted-foreground">MOQ: <span className="text-lime">{isTopWear ? "1 pc (Max: 3 pcs)" : "5 pcs"}</span> · per piece</p>
-          {!isTopWear ? <QtyDiscountList qty={totalQty} className="mt-4 lg:hidden" /> : null}
+          {!isTopWear ? <QtyDiscountList qty={totalQty} tiers={tiers} className="mt-4 lg:hidden" />: null}
           {isTopWear ? <span className="mt-4 inline-flex rounded-full bg-accent px-4 py-2 text-xs font-black uppercase tracking-wider text-accent-foreground">Exclusive Ready-to-Wear</span> : null}
 
           {/* print type */}

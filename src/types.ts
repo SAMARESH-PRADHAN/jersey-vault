@@ -32,7 +32,9 @@ export interface Product {
   images: string[];
   rating: number;
   tag?: string;
-  isExclusiveTopWear?: boolean;
+   isExclusiveTopWear?: boolean;
+  family?: "customisable" | "readymade";
+  dbCategory?: string;
   subCategory?: "round-neck" | "polo-neck" | "hoodie" | "sweatshirt" | "oversized-tshirt";
 }
 

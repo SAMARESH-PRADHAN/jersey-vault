@@ -9,8 +9,8 @@ import {
   CUSTOM_TSHIRT_MOQ,
   CUSTOM_TSHIRT_OPTIONS,
   CUSTOM_TSHIRT_PRODUCT,
-  getQtyDiscountPct,
 } from "@/data/products";
+import { pctForQty, useDiscountTiers } from "@/hooks/use-pricing-config";
 import { useLiveCustomDesignOptions } from "@/hooks/use-products";
 import { QtyDiscountList } from "@/components/QtyDiscountList";
 import { inr, uid } from "@/lib/storage";
@@ -42,7 +42,8 @@ type Tab = "overview" | "wash" | "design";
 function CustomTshirtDesign() {
   const customOptions = useLiveCustomDesignOptions(CUSTOM_TSHIRT_OPTIONS);
   const product = CUSTOM_TSHIRT_PRODUCT;
-  const { user, openAuth, addToCart, productReviews } = useApp();
+  const tiers = useDiscountTiers(product);
+    const { user, openAuth, addToCart, productReviews } = useApp();
   const navigate = useNavigate();
 
   const [active, setActive] = useState(0);
@@ -58,8 +59,8 @@ function CustomTshirtDesign() {
   const selected =
     customOptions.find((o) => o.type === optionType) ?? customOptions[0] ?? CUSTOM_TSHIRT_OPTIONS[0]!;
   const totalQty = Object.values(qty).reduce((a, b) => a + b, 0);
-  const discountPct = getQtyDiscountPct(totalQty);
-  const productTotal = totalQty * selected.price;
+  const discountPct = pctForQty(totalQty, tiers);
+    const productTotal = totalQty * selected.price;
   const discountAmt = Math.round((productTotal * discountPct) / 100);
   const total = productTotal - discountAmt;
   const perPc = totalQty ? Math.round(total / totalQty) : 0;
@@ -181,7 +182,7 @@ const avg = reviews.length
               </button>
             ))}
           </div>
-          <QtyDiscountList qty={totalQty} className="mt-4 hidden lg:block" />
+          <QtyDiscountList qty={totalQty} tiers={tiers} className="mt-4 hidden lg:block" />
         </div>
 
         {/* config */}
@@ -211,7 +212,7 @@ const avg = reviews.length
             MOQ: <span className="text-lime">{CUSTOM_TSHIRT_MOQ} pcs</span> · per piece
           </p>
           {/* <ShareWidget name={product.name} code={product.code} /> */}
-          <QtyDiscountList qty={totalQty} className="mt-4 lg:hidden" />
+          <QtyDiscountList qty={totalQty} tiers={tiers} className="mt-4 lg:hidden" />
           {/* UPLOAD YOUR OWN DESIGN T-SHIRT */}
           <section className="panel mt-6 border-lime/40 p-5">
             <h2 className="text-xl">
